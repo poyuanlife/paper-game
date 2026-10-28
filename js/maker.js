@@ -19,7 +19,7 @@ const Maker = (() => {
   }
   function setResult(r) {
     cur = r;
-    const J = Puppet.jointsFromLandmarks(r.lm, r.canvas);
+    const J = r.J || Puppet.jointsFromLandmarks(r.lm, r.canvas);
     cur.J = J; prevPup = Puppet.build(r.canvas, J);
     $('mkWarn').innerHTML = r.warn.map(w => '⚠ ' + w).join('<br>');
     part('mkResult');
