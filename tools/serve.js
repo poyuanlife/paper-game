@@ -1,0 +1,41 @@
+// 本機測試伺服器：node tools/serve.js（加 --no-open 不自動開瀏覽器）
+// 只開放給本機（127.0.0.1）。手機測試請用上傳後的網址（相機需要 https）。
+'use strict';
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
+const { exec } = require('child_process');
+
+const ROOT = path.resolve(__dirname, '..');
+const TYPES = {
+  '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
+  '.json': 'application/json', '.png': 'image/png', '.webp': 'image/webp', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml',
+  '.ico': 'image/x-icon', '.webmanifest': 'application/manifest+json', '.mp3': 'audio/mpeg', '.ogg': 'audio/ogg',
+};
+
+const server = http.createServer((req, res) => {
+  let p;
+  try { p = decodeURIComponent(new URL(req.url, 'http://x').pathname); } catch (e) { res.writeHead(400); res.end(); return; }
+  if (p.endsWith('/')) p += 'index.html';
+  const file = path.join(ROOT, p);
+  if (!file.startsWith(ROOT + path.sep)) { res.writeHead(403); res.end(); return; }
+  fs.stat(file, (err, st) => {
+    if (err || !st.isFile()) { res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }); res.end('找不到檔案：' + p); return; }
+    res.writeHead(200, { 'Content-Type': TYPES[path.extname(file).toLowerCase()] || 'application/octet-stream', 'Content-Length': st.size, 'Cache-Control': 'no-cache' });
+    fs.createReadStream(file).pipe(res);
+  });
+});
+
+let port = 8090;
+server.on('error', e => {
+  if (e.code === 'EADDRINUSE' && port < 8110) { port++; server.listen(port, '127.0.0.1'); }
+  else { console.error('伺服器啟動失敗：', e.message); process.exit(1); }
+});
+server.on('listening', () => {
+  const url = `http://localhost:${port}/`;
+  console.log(`遊戲伺服器已啟動：${url}`);
+  if (process.argv.includes('--no-open')) return;
+  if (process.platform === 'win32') exec(`start "" "${url}"`);
+  else if (process.platform === 'darwin') exec(`open "${url}"`);
+});
+server.listen(port, '127.0.0.1');

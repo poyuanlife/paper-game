@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#9fd8ef">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="紙片人遊樂園">
+<title>紙片人遊樂園</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<!-- 首頁 -->
+<section id="scrHome" class="scr hidden">
+  <div class="homeBox">
+    <h1 class="logo"><span>紙</span><span>片</span><span>人</span><small>遊樂園</small></h1>
+    <p class="tag">把自己變成紙片人，來玩小遊戲！</p>
+    <div class="btnCol">
+      <button id="bPlay" class="big">▶ 開始玩</button>
+      <button id="bMake" class="big alt">📷 做我的紙片人</button>
+    </div>
+  </div>
+  <button id="bSound" class="corner">🔊</button>
+</section>
+
+<!-- 選遊戲 -->
+<section id="scrSelect" class="scr hidden">
+  <div class="panel wide">
+    <h2>選一個遊戲</h2>
+    <div id="gameList" class="cards"></div>
+    <button class="back" data-go="home">← 返回</button>
+  </div>
+</section>
+
+<!-- 做紙片人 -->
+<section id="scrMaker" class="scr hidden">
+  <div class="panel">
+    <h2>做我的紙片人</h2>
+    <div id="mkStart">
+      <div class="example">
+        <svg viewBox="0 0 100 160" class="exPose" aria-hidden="true">
+          <circle cx="50" cy="20" r="13"/>
+          <path d="M36 38 Q50 33 64 38 L61 88 L39 88 Z"/>
+          <path d="M37 40 L24 64 L18 88" class="limb"/><path d="M63 40 L76 64 L82 88" class="limb"/>
+          <path d="M44 88 L41 120 L38 150" class="limb"/><path d="M56 88 L59 120 L62 150" class="limb"/>
+        </svg>
+        <ul class="tips">
+          <li class="ok">正面、<b>全身</b>（頭頂到腳底都要拍到）</li>
+          <li class="ok">手臂<b>稍微張開</b>，不要貼著身體</li>
+          <li class="ok">兩腳<b>稍微分開</b>站好</li>
+          <li class="ok">光線充足，背景越單純越好</li>
+          <li class="no">不要拿東西擋住身體、不要坐著</li>
+        </ul>
+      </div>
+      <div class="btnRow">
+        <button id="mkCam" class="big">📷 拍照</button>
+        <button id="mkAlbum" class="big alt">🖼️ 從相簿選</button>
+      </div>
+      <button id="mkDefault" class="link">改用預設角色</button>
+      <input type="file" id="fileIn" accept="image/*" hidden>
+    </div>
+    <div id="mkBusy" class="hidden"><div class="spinner"></div><p id="mkMsg">處理中…</p></div>
+    <div id="mkResult" class="hidden">
+      <canvas id="mkPrev"></canvas>
+      <p id="mkWarn" class="warn"></p>
+      <div class="slider"><span>去背</span><span class="dim">寬鬆</span><input type="range" id="mkStr" min="0" max="100" value="45"><span class="dim">嚴格</span><b id="mkStrVal">45</b></div>
+      <p class="dim small">背景沒去乾淨 → 往「嚴格」；身體被切掉 → 往「寬鬆」</p>
+      <div class="btnRow">
+        <button id="mkUse" class="big">✔ 用這個角色</button>
+        <button id="mkRetry" class="big alt">重選照片</button>
+      </div>
+    </div>
+    <p id="mkErr" class="err"></p>
+    <p class="dim small">照片只在你的裝置上處理，不會上傳。</p>
+    <button class="back" data-go="home">← 返回</button>
+  </div>
+</section>
+
+<!-- 相機 -->
+<section id="scrCam" class="hidden">
+  <video id="camV" playsinline muted autoplay></video>
+  <svg class="guide" viewBox="0 0 100 160" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+    <circle cx="50" cy="20" r="13"/>
+    <path d="M36 38 Q50 33 64 38 L61 88 L39 88 Z"/>
+    <path d="M37 40 L24 64 L18 88" class="limb"/><path d="M63 40 L76 64 L82 88" class="limb"/>
+    <path d="M44 88 L41 120 L38 150" class="limb"/><path d="M56 88 L59 120 L62 150" class="limb"/>
+  </svg>
+  <div id="camCount"></div>
+  <p class="camHint">把手機立好，退到全身都在框裡，再按快門（有倒數）</p>
+  <div class="camBar">
+    <button id="camCancel" class="round">✕</button>
+    <button id="camTimer" class="pill">⏱ 10 秒</button>
+    <button id="camShot" class="shutter" aria-label="拍照"></button>
+    <button id="camFlip" class="round" aria-label="切換鏡頭">🔄</button>
+  </div>
+</section>
+
+<!-- 遊戲開始前 -->
+<section id="scrReady" class="scr dim hidden">
+  <div class="panel small">
+    <div id="rdIcon" class="bigIcon"></div>
+    <h2 id="rdName"></h2>
+    <p id="rdHow"></p>
+    <p id="rdBest" class="dim"></p>
+    <p class="blink">點一下開始</p>
+  </div>
+</section>
+
+<!-- 遊戲中 -->
+<div id="hud" class="hidden">
+  <div id="hudL"></div><div id="hudR"></div>
+  <button id="bPause" aria-label="暫停">⏸</button>
+</div>
+
+<section id="scrPause" class="scr dim hidden">
+  <div class="panel small">
+    <h2>暫停</h2>
+    <div class="btnCol">
+      <button id="psResume" class="big">▶ 繼續</button>
+      <button id="psRestart" class="big alt">↻ 重新開始</button>
+      <button id="psQuit" class="big alt">選別的遊戲</button>
+    </div>
+  </div>
+</section>
+
+<section id="scrResult" class="scr top hidden">
+  <div class="panel small result">
+    <h2 id="rsTitle">結束！</h2>
+    <div class="score"><span id="rsScore">0</span> 分</div>
+    <div id="rsNew" class="newRec hidden">🎉 新紀錄！</div>
+    <p class="dim">最高分：<span id="rsBest">0</span></p>
+    <div class="btnRow">
+      <button id="rsAgain" class="big">↻ 再玩一次</button>
+      <button id="rsBack" class="big alt">選遊戲</button>
+    </div>
+  </div>
+</section>
+
+<script src="js/store.js"></script>
+<script src="js/cutout.js"></script>
+<script src="js/puppet.js"></script>
+<script src="js/main.js"></script>
+<script src="js/maker.js"></script>
+<script src="js/games/runner.js"></script>
+<script src="js/games/catch.js"></script>
+<script src="js/games/fly.js"></script>
+</body>
+</html>
