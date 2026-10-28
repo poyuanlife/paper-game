@@ -8,7 +8,8 @@
 //    rot 全身旋轉、lean 上半身前後傾（繞骨盆）、head 頭
 //    aL / aR 上臂（正 = 往外舉）、aLf / aRf 前臂（正 = 往外彎）
 //    lL / lR 大腿（正 = 往外張）、lLf / lRf 小腿（正 = 往外彎）
-//    dy 上下位移（人物高度的比例，負 = 往上）、sx / sy 縮放（sx 負的 = 左右翻面）
+//    dy 上下位移（人物高度的比例，負 = 往上）、sx / sy 縮放（sx 負的 = 左右翻面）、hsx / hsy 頭的縮放
+//  opt.decor(部位名稱, ctx, pup)：畫完每個部位後呼叫，座標是部位圖片的原始座標（用來貼 OK 繃等）
 //  「左 L」是畫面的左邊。
 // =====================================================
 const Puppet = (() => {
@@ -127,7 +128,7 @@ const Puppet = (() => {
     const sx = pose.sx == null ? 1 : pose.sx, sy = pose.sy == null ? 1 : pose.sy;
     const pivot = (p, a, fn) => { ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(a); ctx.translate(-p.x, -p.y); fn(); ctx.restore(); };
     const scene = layer => {
-      const put = n => { const q = P[n]; if (q) ctx.drawImage(layer === 0 ? q.border : q.img, q.x, q.y); };
+      const put = n => { const q = P[n]; if (!q) return; ctx.drawImage(layer === 0 ? q.border : q.img, q.x, q.y); if (layer === 1 && opt.decor) opt.decor(n, ctx, pup); };
       ctx.save();
       ctx.translate(x, y + g('dy') * height);
       ctx.scale(k * sx, k * sy);
@@ -137,7 +138,11 @@ const Puppet = (() => {
         pivot(J.hipR, -g('lR'), () => { put('thighR'); pivot(J.knR, -g('lRf'), () => put('shinR')); });
         pivot(J.pelvis, g('lean'), () => {
           put('torso');
-          pivot(J.neck, g('head'), () => put('head'));
+          pivot(J.neck, g('head'), () => {
+            // 頭被打扁：hsx / hsy 以脖子為中心縮放
+            const hx = pose.hsx == null ? 1 : pose.hsx, hy = pose.hsy == null ? 1 : pose.hsy;
+            ctx.save(); ctx.translate(J.neck.x, J.neck.y); ctx.scale(hx, hy); ctx.translate(-J.neck.x, -J.neck.y); put('head'); ctx.restore();
+          });
           pivot(J.shL, g('aL'), () => { put('upperL'); pivot(J.elL, g('aLf'), () => put('foreL')); });
           pivot(J.shR, -g('aR'), () => { put('upperR'); pivot(J.elR, -g('aRf'), () => put('foreR')); });
         });
@@ -151,7 +156,6 @@ const Puppet = (() => {
     scene(0);
     ctx.restore();
     ctx.save(); if (opt.alpha != null) ctx.globalAlpha = opt.alpha; scene(1);
-    if (opt.flash) { ctx.globalCompositeOperation = 'source-atop'; }
     ctx.restore();
   }
 
@@ -211,7 +215,7 @@ const Puppet = (() => {
     dance: t => { const b = t * 2 * Math.PI * 2, s = S(b); return { dy: -Math.abs(S(b)) * 0.05, rot: 0.1 * s, head: -0.12 * s, aL: 1.3 + 1.1 * s, aLf: 0.8 + 0.6 * C(b), aR: 1.3 - 1.1 * s, aRf: 0.8 - 0.6 * C(b),
       lL: 0.25 * Math.max(0, s), lLf: -0.5 * Math.max(0, s), lR: 0.25 * Math.max(0, -s), lRf: -0.5 * Math.max(0, -s) }; },
   };
-  const mix = (a, b, t) => { const o = {}; for (const n of new Set([...Object.keys(a), ...Object.keys(b)])) { const d = n === 'sx' || n === 'sy' ? 1 : 0; o[n] = (a[n] == null ? d : a[n]) * (1 - t) + (b[n] == null ? d : b[n]) * t; } return o; };
+  const mix = (a, b, t) => { const o = {}; for (const n of new Set([...Object.keys(a), ...Object.keys(b)])) { const d = /^h?s[xy]$/.test(n) ? 1 : 0; o[n] = (a[n] == null ? d : a[n]) * (1 - t) + (b[n] == null ? d : b[n]) * t; } return o; };
 
   return { build, draw, jointsFromLandmarks, makeDefault, Poses, mix };
 })();

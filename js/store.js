@@ -66,6 +66,12 @@ const Sfx = (() => {
     win: () => { [523, 659, 784, 1047].forEach((f, i) => tone(f, f, 0.16, 'square', 0.07, i * 0.1)); },
     shutter: () => { noise(0.08, 0.3); tone(1800, 900, 0.05, 'square', 0.05); },
     tick: () => tone(1200, 1200, 0.04, 'square', 0.05),
+    punch: () => { noise(0.12, 0.45); tone(160, 50, 0.16, 'sine', 0.5); },
+    crit: () => { noise(0.2, 0.5); tone(120, 40, 0.3, 'sine', 0.6); tone(900, 1800, 0.12, 'square', 0.05, 0.05); },
+    whiff: () => { noise(0.1, 0.08); tone(400, 200, 0.12, 'sine', 0.04); },
+    block: () => { tone(300, 280, 0.08, 'square', 0.1); noise(0.05, 0.15); },
+    bell: () => { [0, 0.28, 0.56].forEach(d => { tone(1320, 1300, 0.5, 'triangle', 0.18, d); tone(2640, 2600, 0.3, 'sine', 0.05, d); }); },
+    boing: () => tone(180, 520, 0.35, 'sine', 0.2),
   };
   return { play: n => { try { play[n] && play[n](); } catch (e) {} }, unlock: ctx, get on() { return on; }, toggle() { on = !on; Store.set('sound', on); return on; } };
 })();
