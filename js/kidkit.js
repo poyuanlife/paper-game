@@ -8,7 +8,7 @@ const Kid = (() => {
 
   function emoji(c, s, x, y, size, rot = 0) {
     c.save(); c.translate(x, y); if (rot) c.rotate(rot);
-    c.font = `${Math.round(size)}px ${FONT}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(s, 0, size * 0.05);
+    c.fillStyle = '#000'; c.font = `${Math.round(size)}px ${FONT}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(s, 0, size * 0.05);
     c.restore();
   }
   // 有白色紙邊的字
@@ -58,6 +58,29 @@ const Kid = (() => {
     };
   }
 
+  // 滑動 / 拉放：tap() 裡 begin(x, y)；update 呼叫 step(放開時拿到 {x0, y0, x, y, vx, vy})
+  function makeSwipe() {
+    return {
+      on: false, pts: [],
+      begin(x, y) { this.on = true; this.pts = [{ x, y, t: performance.now() }]; },
+      step(onEnd) {
+        if (!this.on) return; const now = performance.now();
+        if (Input.down) { this.pts.push({ x: Input.x, y: Input.y, t: now }); if (this.pts.length > 40) this.pts.shift(); return; }
+        this.on = false; const b = this.pts[this.pts.length - 1], a = this.pts.find(p => b.t - p.t < 110) || this.pts[0], dt = Math.max(0.016, (b.t - a.t) / 1000);
+        onEnd({ x0: this.pts[0].x, y0: this.pts[0].y, x: b.x, y: b.y, vx: (b.x - a.x) / dt, vy: (b.y - a.y) / dt });
+      },
+      get cur() { return this.on ? { x: Input.x, y: Input.y } : null; },
+    };
+  }
+
+  // 只畫紙片人的頭：頭的中心在 (x, y)、半徑大約 r；clipR 有給就裁成圓形
+  function head(c, x, y, r, pose = {}, clipR) {
+    const P = App.pup; if (!P) return;
+    const A = Puppet.anchors(P), k1 = Puppet.toScreen(P, 1, A.head).k, PH = r / (A.headR * k1), off = Puppet.toScreen(P, PH, A.head), sx = pose.sx || 1;
+    c.save(); if (clipR) { c.beginPath(); c.arc(x, y, clipR, 0, Math.PI * 2); c.clip(); }
+    Puppet.draw(c, P, x - off.x * sx, y - off.y, PH, pose, { shadow: false }); c.restore();
+  }
+
   // 背景 + 地面，回傳地面高度
   function ground(c, theme, t, frac = 0.93) {
     const T = Paper.bg(c, theme, 0, t), gy = V.H * frac;
@@ -68,5 +91,5 @@ const Kid = (() => {
   const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const portrait = () => V.W < 700;
 
-  return { FONT, emoji, text, say, button, hit, makeDrag, ground, shuffle, portrait };
+  return { FONT, emoji, text, say, button, hit, makeDrag, makeSwipe, head, ground, shuffle, portrait };
 })();

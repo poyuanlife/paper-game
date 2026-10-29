@@ -77,6 +77,14 @@ const Sfx = (() => {
     flip: () => tone(1200, 800, 0.05, 'triangle', 0.08),
     giggle: () => { [0, 0.09, 0.18].forEach((d, i) => tone(900 + i * 140, 700 + i * 140, 0.07, 'triangle', 0.12, d)); },
     rustle: () => noise(0.14, 0.07),
+    swish: () => { noise(0.18, 0.12); tone(900, 300, 0.18, 'sine', 0.05); },
+    crack: () => { noise(0.05, 0.3); tone(1800, 600, 0.05, 'square', 0.05); },
+    hatch: () => { [660, 880, 1100].forEach((f, i) => tone(f, f * 1.1, 0.09, 'triangle', 0.12, i * 0.07)); },
+    honk: () => { tone(330, 330, 0.12, 'square', 0.06); tone(415, 415, 0.16, 'square', 0.06, 0.13); },
+    bat: () => { noise(0.08, 0.5); tone(1200, 400, 0.08, 'square', 0.1); },
+    pins: () => { for (let i = 0; i < 5; i++) { tone(700 + Math.random() * 600, 300, 0.07, 'square', 0.04, i * 0.04); } noise(0.3, 0.2); },
+    thud: () => tone(140, 60, 0.18, 'sine', 0.35),
+    blow: () => noise(0.12, 0.05),
     ding: () => { tone(880, 880, 0.1, 'triangle', 0.14); tone(1320, 1320, 0.22, 'triangle', 0.12, 0.09); },
     nope: () => { tone(330, 300, 0.12, 'sine', 0.16); tone(262, 250, 0.18, 'sine', 0.14, 0.12); },
     snap: () => { tone(1500, 900, 0.04, 'square', 0.06); tone(700, 700, 0.08, 'triangle', 0.12, 0.03); },
@@ -87,5 +95,7 @@ const Sfx = (() => {
   const VIB = { hit: 60, boom: 120, punch: 25, crit: 70, block: 15, over: 40 };
   const buzz = n => { if (on && VIB[n] && navigator.vibrate) try { navigator.vibrate(VIB[n]); } catch (e) {} };
   function note(f, dur = 0.5, vol = 0.16) { tone(f, f, dur, 'triangle', vol); tone(f * 2, f * 2, dur * 0.6, 'sine', vol * 0.25); }
-  return { note, play: n => { try { play[n] && play[n](); buzz(n); } catch (e) {} }, unlock: ctx, get on() { return on; }, toggle() { on = !on; Store.set('sound', on); return on; } };
+  // 鼓聲：音高往下掉 + 一點雜音
+  function drum(f = 160, vol = 0.4) { tone(f, f * 0.45, 0.28, 'sine', vol); noise(0.05, 0.12); }
+  return { note, drum, play: n => { try { play[n] && play[n](); buzz(n); } catch (e) {} }, unlock: ctx, get on() { return on; }, toggle() { on = !on; Store.set('sound', on); return on; } };
 })();
