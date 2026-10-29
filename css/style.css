@@ -53,7 +53,7 @@ button.corner { position: fixed; top: max(12px, env(safe-area-inset-top)); right
 
 /* ---- 選遊戲 ---- */
 .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; }
-.gcard { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 18px 14px 16px; border-radius: 16px; background: var(--c); color: #fff;
+.gcard { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 18px 14px 16px; border-radius: 16px; background: var(--c); color: #fff;
   transform: rotate(var(--r)); box-shadow: 0 0 0 5px #fffdf5, 0 8px 0 5px rgba(0, 0, 0, 0.08), 0 12px 22px rgba(60, 40, 10, 0.25); transition: transform 0.12s; }
 .gcard:hover { transform: rotate(0deg) scale(1.03); }
 .gcard:active { transform: scale(0.97); }
@@ -125,3 +125,7 @@ button.corner { position: fixed; top: max(12px, env(safe-area-inset-top)); right
 .result .score span { font-size: 1.2em; }
 .newRec { display: inline-block; margin: 6px 0; padding: 4px 16px; border-radius: 99px; background: #ffd93d; font-weight: 900; font-size: 20px; animation: pop 0.6s ease-out; }
 @keyframes pop { 0% { transform: scale(0.3); } 70% { transform: scale(1.15); } 100% { transform: scale(1); } }
+.gKid { position: absolute; top: -10px; right: -6px; background: #ffd23f; color: #6a4300; font-size: 12px; font-weight: 900; padding: 3px 9px; border-radius: 999px;
+  box-shadow: 0 0 0 3px #fffdf5, 0 3px 6px rgba(60, 40, 10, 0.25); transform: rotate(6deg); white-space: nowrap; }
+#gameTabs { max-width: 440px; }
+#gameTabs button { font-size: 16px; white-space: nowrap; }

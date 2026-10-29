@@ -3,12 +3,13 @@
 //  - 去背工具、字型（CDN）：存起來就一直用（檔案很大、不會變）
 // 新增檔案時記得加進 SHELL，並把 VERSION 加一。
 'use strict';
-const VERSION = 'paper-v2';
+const VERSION = 'paper-v4';
 const SHELL = [
   './', 'index.html', 'manifest.webmanifest', 'css/style.css',
-  'js/store.js', 'js/cutout.js', 'js/puppet.js', 'js/pet.js', 'js/main.js', 'js/maker.js',
+  'js/store.js', 'js/cutout.js', 'js/puppet.js', 'js/pet.js', 'js/main.js', 'js/kidkit.js', 'js/maker.js',
   'js/games/runner.js', 'js/games/catch.js', 'js/games/fly.js', 'js/games/boxing.js',
-  'js/games/stack.js', 'js/games/launch.js', 'js/games/dance.js',
+  'js/games/stack.js', 'js/games/launch.js', 'js/games/dance.js', 'js/games/bubble.js', 'js/games/peek.js', 'js/games/memory.js',
+  'js/games/balloon.js', 'js/games/count.js', 'js/games/piano.js', 'js/games/fishing.js', 'js/games/garden.js', 'js/games/dots.js', 'js/games/coloring.js', 'js/games/puzzle.js', 'js/games/feed.js', 'js/games/shapes.js',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png',
 ];
 const CDN = ['cdn.jsdelivr.net', 'storage.googleapis.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];

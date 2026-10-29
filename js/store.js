@@ -73,9 +73,19 @@ const Sfx = (() => {
     block: () => { tone(300, 280, 0.08, 'square', 0.1); noise(0.05, 0.15); },
     bell: () => { [0, 0.28, 0.56].forEach(d => { tone(1320, 1300, 0.5, 'triangle', 0.18, d); tone(2640, 2600, 0.3, 'sine', 0.05, d); }); },
     boing: () => tone(180, 520, 0.35, 'sine', 0.2),
+    pop: () => { tone(500, 1500, 0.06, 'sine', 0.25); noise(0.04, 0.1); },
+    flip: () => tone(1200, 800, 0.05, 'triangle', 0.08),
+    giggle: () => { [0, 0.09, 0.18].forEach((d, i) => tone(900 + i * 140, 700 + i * 140, 0.07, 'triangle', 0.12, d)); },
+    rustle: () => noise(0.14, 0.07),
+    ding: () => { tone(880, 880, 0.1, 'triangle', 0.14); tone(1320, 1320, 0.22, 'triangle', 0.12, 0.09); },
+    nope: () => { tone(330, 300, 0.12, 'sine', 0.16); tone(262, 250, 0.18, 'sine', 0.14, 0.12); },
+    snap: () => { tone(1500, 900, 0.04, 'square', 0.06); tone(700, 700, 0.08, 'triangle', 0.12, 0.03); },
+    chomp: () => { noise(0.06, 0.2); tone(220, 160, 0.08, 'square', 0.06, 0.02); },
+    splash: () => { noise(0.3, 0.18); tone(400, 120, 0.25, 'sine', 0.08); },
   };
   // 手機震動（Android 才有；跟著音效開關）
   const VIB = { hit: 60, boom: 120, punch: 25, crit: 70, block: 15, over: 40 };
   const buzz = n => { if (on && VIB[n] && navigator.vibrate) try { navigator.vibrate(VIB[n]); } catch (e) {} };
-  return { play: n => { try { play[n] && play[n](); buzz(n); } catch (e) {} }, unlock: ctx, get on() { return on; }, toggle() { on = !on; Store.set('sound', on); return on; } };
+  function note(f, dur = 0.5, vol = 0.16) { tone(f, f, dur, 'triangle', vol); tone(f * 2, f * 2, dur * 0.6, 'sine', vol * 0.25); }
+  return { note, play: n => { try { play[n] && play[n](); buzz(n); } catch (e) {} }, unlock: ctx, get on() { return on; }, toggle() { on = !on; Store.set('sound', on); return on; } };
 })();

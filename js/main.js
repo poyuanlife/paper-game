@@ -226,14 +226,18 @@ const App = {
 
 function renderGameList() {
   const box = $('gameList'); box.innerHTML = '';
-  GAMES.forEach((g, i) => {
+  const tab = Store.get('gameTab', 'all');
+  document.querySelectorAll('#gameTabs button').forEach(b => b.classList.toggle('on', b.dataset.t === tab));
+  GAMES.filter(g => tab === 'all' || (tab === 'kid') === !!g.kid).forEach((g, i) => {
     const b = document.createElement('button'); b.className = 'gcard'; b.style.setProperty('--c', g.color); b.style.setProperty('--r', (i % 2 ? 1.2 : -1.2) + 'deg');
     const best = Store.best(g.id);
-    b.innerHTML = `<span class="gIcon">${g.icon}</span><span class="gName">${g.name}</span><span class="gDesc">${g.desc}</span><span class="gBest">${best ? '最高分 ' + best : '還沒玩過'}</span>`;
+    b.innerHTML = (g.kid ? `<span class="gKid">寶寶也會玩</span>` : "") + `<span class="gIcon">${g.icon}</span><span class="gName">${g.name}</span><span class="gDesc">${g.desc}</span><span class="gBest">${best ? '最高分 ' + best : '還沒玩過'}</span>`;
     b.onclick = () => { Sfx.play('click'); App.startGame(g); };
     box.appendChild(b);
   });
 }
+
+document.querySelectorAll('#gameTabs button').forEach(b => b.onclick = () => { Sfx.play('click'); Store.set('gameTab', b.dataset.t); renderGameList(); });
 
 // ---- 主迴圈 ----
 let lastT = performance.now();
