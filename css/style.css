@@ -48,6 +48,9 @@ button.corner { position: fixed; top: max(12px, env(safe-area-inset-top)); right
   .btnCol { flex-direction: row; } .btnCol .big { flex: 1; padding: 10px 12px; font-size: 17px; }
 }
 
+#bInstall { display: block; margin: 14px auto 0; font-weight: 700; opacity: 0.9; text-shadow: 0 0 6px #fffdf5, 0 0 3px #fffdf5; }
+.installTip { background: #fffdf5; border-radius: 12px; padding: 10px 14px; font-size: 14.5px; line-height: 1.6; box-shadow: 0 4px 0 #e9dcc2; }
+
 /* ---- 選遊戲 ---- */
 .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; }
 .gcard { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 18px 14px 16px; border-radius: 16px; background: var(--c); color: #fff;
@@ -58,8 +61,9 @@ button.corner { position: fixed; top: max(12px, env(safe-area-inset-top)); right
 .gName { font-size: 23px; font-weight: 900; }
 .gDesc { font-size: 14px; line-height: 1.45; opacity: 0.95; }
 .gBest { margin-top: 4px; font-size: 13px; font-weight: 700; background: rgba(255, 255, 255, 0.25); padding: 3px 12px; border-radius: 99px; }
-@media (max-width: 520px) { .cards { grid-template-columns: 1fr; gap: 14px; } .gcard { flex-direction: row; flex-wrap: wrap; text-align: left; justify-content: flex-start; padding: 12px 16px; }
-  .gIcon { font-size: 36px; } .gName { font-size: 20px; } .gDesc { flex-basis: 100%; } }
+/* 手機：兩欄小卡片（遊戲多了也不用滑太久） */
+@media (max-width: 620px) { .panel.wide { padding: 18px 14px 14px; } .cards { grid-template-columns: 1fr 1fr; gap: 14px 12px; }
+  .gcard { padding: 12px 8px 10px; gap: 3px; } .gIcon { font-size: 34px; } .gName { font-size: 18px; } .gDesc { font-size: 12px; line-height: 1.35; } .gBest { font-size: 11.5px; padding: 2px 8px; } }
 
 /* ---- 做紙片人 ---- */
 .example { display: flex; gap: 16px; align-items: center; text-align: left; background: #f7efdc; border-radius: 14px; padding: 12px 14px; }
@@ -69,6 +73,15 @@ button.corner { position: fixed; top: max(12px, env(safe-area-inset-top)); right
 .tips { margin: 0; padding: 0; list-style: none; font-size: 14.5px; line-height: 1.75; }
 .tips li::before { content: "✔ "; color: #3e9a4b; font-weight: 900; }
 .tips li.no::before { content: "✘ "; color: #d9452b; }
+.seg { display: flex; background: #f2e6cc; border-radius: 14px; padding: 4px; margin: 0 auto 14px; max-width: 340px; }
+.seg button { flex: 1; padding: 9px 6px; border-radius: 11px; font-weight: 900; font-size: 17px; opacity: 0.65; }
+.seg button.on { background: #fffdf5; opacity: 1; box-shadow: 0 3px 0 #e0d2b5; color: #e0573c; }
+#scrMaker[data-mode="human"] .exPet, #scrMaker[data-mode="pet"] .exHuman { display: none; }
+.exPose.pet { width: 104px; }
+#scrCam[data-mode="human"] .guidePet, #scrCam[data-mode="pet"] .guideHuman { display: none; }
+#scrCam .guidePet { top: 22%; height: 52%; width: 92%; }
+#mkPrev.edit { touch-action: none; cursor: grab; }
+#bChar { display: block; margin: 6px auto 0; font-weight: 700; opacity: 0.9; text-shadow: 0 0 6px #fffdf5, 0 0 3px #fffdf5; }
 #mkPrev { width: 100%; height: min(46vh, 380px); display: block; border-radius: 12px; background: repeating-linear-gradient(45deg, #f5eedd 0 14px, #efe5cf 14px 28px); }
 .warn { color: #b8620c; font-size: 14px; }
 .err { color: #d9452b; font-weight: 700; min-height: 1px; }

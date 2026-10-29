@@ -8,6 +8,10 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="紙片人遊樂園">
 <title>紙片人遊樂園</title>
+<meta name="description" content="把自己變成紙片人，來玩小遊戲！">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&display=swap">
 <link rel="stylesheet" href="css/style.css">
@@ -24,6 +28,9 @@
       <button id="bPlay" class="big">▶ 開始玩</button>
       <button id="bMake" class="big alt">📷 做我的紙片人</button>
     </div>
+    <button id="bChar" class="link hidden"></button>
+    <button id="bInstall" class="link hidden">📲 加到主畫面，像 App 一樣玩</button>
+    <p id="installTip" class="installTip hidden"></p>
   </div>
   <button id="bSound" class="corner">🔊</button>
 </section>
@@ -42,7 +49,8 @@
   <div class="panel">
     <h2>做我的紙片人</h2>
     <div id="mkStart">
-      <div class="example">
+      <div class="seg" id="mkMode"><button data-m="human">🧍 拍人</button><button data-m="pet">🐶 拍貓狗</button></div>
+      <div class="example exHuman">
         <svg viewBox="0 0 100 160" class="exPose" aria-hidden="true">
           <circle cx="50" cy="20" r="13"/>
           <path d="M36 38 Q50 33 64 38 L61 88 L39 88 Z"/>
@@ -57,6 +65,21 @@
           <li class="no">不要拿東西擋住身體、不要坐著</li>
         </ul>
       </div>
+      <div class="example exPet">
+        <svg viewBox="0 0 160 110" class="exPose pet" aria-hidden="true">
+          <path d="M38 40 Q80 30 118 38 L124 70 Q80 78 40 72 Z"/>
+          <circle cx="132" cy="30" r="17"/><path d="M122 16 L126 2 L134 14 Z M138 14 L146 2 L148 18 Z"/>
+          <path d="M44 70 L40 104 M58 72 L60 104 M108 72 L104 104 M120 70 L124 104" class="limb"/>
+          <path d="M40 44 Q20 40 14 20" class="limb"/>
+        </svg>
+        <ul class="tips">
+          <li class="ok"><b>側面</b>、全身（四隻腳都要拍到）</li>
+          <li class="ok">頭朝左、朝右都可以</li>
+          <li class="ok">等牠<b>站著</b>不動的時候拍</li>
+          <li class="ok">背景越單純越好</li>
+          <li class="no">不要正面、趴著或捲成一團</li>
+        </ul>
+      </div>
       <div class="btnRow">
         <button id="mkCam" class="big">📷 拍照</button>
         <button id="mkAlbum" class="big alt">🖼️ 從相簿選</button>
@@ -67,6 +90,8 @@
     <div id="mkBusy" class="hidden"><div class="spinner"></div><p id="mkMsg">處理中…</p></div>
     <div id="mkResult" class="hidden">
       <canvas id="mkPrev"></canvas>
+      <p id="mkEditHint" class="dim small hidden">拖拉圓點到正確的位置：<b style="color:#e8453c">頭</b>、<b style="color:#d9a400">脖子</b>、<b style="color:#1fa7b5">尾巴根</b>、<b style="color:#3b5bdb">尾巴尖</b>、<b style="color:#c23bc9">前腳</b>、<b style="color:#777">後腳</b></p>
+      <button id="mkEdit" class="link hidden">🦴 調整關節</button>
       <p id="mkWarn" class="warn"></p>
       <div class="slider"><span>去背</span><span class="dim">寬鬆</span><input type="range" id="mkStr" min="0" max="100" value="45"><span class="dim">嚴格</span><b id="mkStrVal">45</b></div>
       <p class="dim small">背景沒去乾淨 → 往「嚴格」；身體被切掉 → 往「寬鬆」</p>
@@ -84,14 +109,18 @@
 <!-- 相機 -->
 <section id="scrCam" class="hidden">
   <video id="camV" playsinline muted autoplay></video>
-  <svg class="guide" viewBox="0 0 100 160" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+  <svg class="guide guidePet" viewBox="0 0 160 110" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+    <path d="M38 40 Q80 30 118 38 L124 70 Q80 78 40 72 Z"/><circle cx="132" cy="30" r="17"/>
+    <path d="M44 70 L40 104 M58 72 L60 104 M108 72 L104 104 M120 70 L124 104 M40 44 Q20 40 14 20" class="limb"/>
+  </svg>
+  <svg class="guide guideHuman" viewBox="0 0 100 160" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
     <circle cx="50" cy="20" r="13"/>
     <path d="M36 38 Q50 33 64 38 L61 88 L39 88 Z"/>
     <path d="M37 40 L24 64 L18 88" class="limb"/><path d="M63 40 L76 64 L82 88" class="limb"/>
     <path d="M44 88 L41 120 L38 150" class="limb"/><path d="M56 88 L59 120 L62 150" class="limb"/>
   </svg>
   <div id="camCount"></div>
-  <p class="camHint">把手機立好，退到全身都在框裡，再按快門（有倒數）</p>
+  <p class="camHint" id="camHint">把手機立好，退到全身都在框裡，再按快門（有倒數）</p>
   <div class="camBar">
     <button id="camCancel" class="round">✕</button>
     <button id="camTimer" class="pill">⏱ 10 秒</button>
@@ -138,17 +167,22 @@
       <button id="rsAgain" class="big">↻ 再玩一次</button>
       <button id="rsBack" class="big alt">選遊戲</button>
     </div>
+    <button id="rsShare" class="link">📸 存成圖片 / 分享</button>
   </div>
 </section>
 
 <script src="js/store.js"></script>
 <script src="js/cutout.js"></script>
 <script src="js/puppet.js"></script>
+<script src="js/pet.js"></script>
 <script src="js/main.js"></script>
 <script src="js/maker.js"></script>
 <script src="js/games/runner.js"></script>
 <script src="js/games/catch.js"></script>
 <script src="js/games/fly.js"></script>
 <script src="js/games/boxing.js"></script>
+<script src="js/games/stack.js"></script>
+<script src="js/games/launch.js"></script>
+<script src="js/games/dance.js"></script>
 </body>
 </html>

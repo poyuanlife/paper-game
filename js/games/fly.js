@@ -36,7 +36,7 @@ registerGame({
     if (this.y - this.PH < 0) { this.y = this.PH; this.vy = Math.max(0, this.vy); }
 
     // 碰撞：身體當成一個圓
-    const cx = this.px, cy = this.y - this.PH * 0.5, r = this.PH * 0.3;
+    const ph = Puppet.size(App.pup, this.PH).h, cx = this.px, cy = this.y - ph * 0.5, r = Math.max(ph, this.PH * 0.75) * 0.3;
     let hit = this.y >= this.floor;
     for (const p of this.pipes) {
       const nx = clamp(cx, p.x - p.w / 2, p.x + p.w / 2);

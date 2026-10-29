@@ -46,36 +46,47 @@ const Puppet = (() => {
     };
   }
 
-  // 把 canvas + 關節 切成部位
-  const ORDER = ['thighL', 'shinL', 'thighR', 'shinR', 'torso', 'head', 'upperL', 'foreL', 'upperR', 'foreR'];
-  function build(src, J0) {
-    // 先縮放到固定高度
-    const k = SIZE / src.height, W = Math.round(src.width * k), H = SIZE;
-    const c = canvasOf(W, H), x = c.getContext('2d'); x.imageSmoothingQuality = 'high'; x.drawImage(src, 0, 0, W, H);
-    const J = {}; for (const n in J0) J[n] = { x: J0[n].x * k, y: J0[n].y * k };
-    const img = x.getImageData(0, 0, W, H), d = img.data;
-    const sw = Math.max(dist(J.shL, J.shR), H * 0.12);
+  // 清掉夾在兩個部位中間的細長碎片（例如衣服側邊被分給手臂的一條）：
+  // 對每個部位做「先縮再放」（opening），太細的地方會消失，再分給旁邊最近的部位。不然舉手時會甩出一條條白色毛刺。
+  function cleanSlivers(lab, W, H, n, r) {
+    const N = W * H, keep = new Uint8Array(N), I = new Int32Array((W + 1) * (H + 1));
+    const integ = f => { for (let y = 0; y < H; y++) { let row = 0; for (let x = 0; x < W; x++) { row += f(y * W + x); I[(y + 1) * (W + 1) + x + 1] = I[y * (W + 1) + x + 1] + row; } } };
+    const box = (x, y) => { const x0 = Math.max(0, x - r), y0 = Math.max(0, y - r), x1 = Math.min(W, x + r + 1), y1 = Math.min(H, y + r + 1);
+      return [I[y1 * (W + 1) + x1] - I[y0 * (W + 1) + x1] - I[y1 * (W + 1) + x0] + I[y0 * (W + 1) + x0], (x1 - x0) * (y1 - y0)]; };
+    const er = new Uint8Array(N);
+    for (let L = 0; L < n; L++) {
+      // 縮：方框裡只有自己或背景 → 留下
+      integ(p => (lab[p] === L || lab[p] < 0) ? 1 : 0);
+      er.fill(0); for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const p = y * W + x; if (lab[p] === L) { const [c, a] = box(x, y); if (c === a) er[p] = 1; } }
+      // 放：方框裡有縮完還在的 → 留下
+      integ(p => er[p]);
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const p = y * W + x; if (lab[p] === L && box(x, y)[0] > 0) keep[p] = 1; }
+    }
+    // 沒留下的像素：從旁邊留下的部位一圈一圈長過去
+    let q = [];
+    for (let p = 0; p < N; p++) { if (lab[p] < 0) continue; if (keep[p]) q.push(p); else lab[p] = -2; }
+    while (q.length) {
+      const nq = [];
+      for (const p of q) { const x = p % W; for (const o of [x > 0 ? p - 1 : -1, x < W - 1 ? p + 1 : -1, p >= W ? p - W : -1, p < N - W ? p + W : -1]) if (o >= 0 && lab[o] === -2) { lab[o] = lab[p]; nq.push(o); } }
+      q = nq;
+    }
+  }
 
-    // 每個部位的骨頭（線段）和偏好（bias 越大，越容易把旁邊的像素分給它）
-    const bones = {
-      head: { segs: [[J.neck, J.top]], bias: sw * 0.22 },
-      torso: { segs: [[J.neck, J.pelvis]], bias: sw * 0.26 },
-      upperL: { segs: [[J.shL, J.elL]] }, foreL: { segs: [[J.elL, J.wrL], [J.wrL, J.hnL]] },
-      upperR: { segs: [[J.shR, J.elR]] }, foreR: { segs: [[J.elR, J.wrR], [J.wrR, J.hnR]] },
-      thighL: { segs: [[J.hipL, J.knL]] }, shinL: { segs: [[J.knL, J.anL], [J.anL, J.ftL]] },
-      thighR: { segs: [[J.hipR, J.knR]] }, shinR: { segs: [[J.knR, J.anR], [J.anR, J.ftR]] },
-    };
-    const names = Object.keys(bones), lab = new Int8Array(W * H).fill(-1), TORSO = names.indexOf('torso');
-    // 肩膀到髖部圍起來的四邊形一定算身體（不然腋下的衣服會被分給手臂，舉手時跟著飛走）
-    const quad = [J.shL, J.shR, J.hipR, J.hipL];
-    const inQuad = (px, py) => { let s = 0; for (let i = 0; i < 4; i++) { const a = quad[i], b = quad[(i + 1) % 4], c = (b.x - a.x) * (py - a.y) - (b.y - a.y) * (px - a.x); if (c !== 0) { if (s && Math.sign(c) !== s) return false; s = Math.sign(c); } } return true; };
+  // ---- 通用的切法：給骨頭（線段）、限制、關節補片，把去背圖切成一塊一塊的部位 ----
+  //  spec(J, W, H) 回傳 { sw: 尺寸參考, bones: {名稱: {segs, bias}}, allow(名稱, x, y), force(x, y) → 名稱或 null, caps: [[父, 子, 關節點, 半徑比例]] }
+  function cutParts(src, J0, spec, maxW = Infinity) {
+    const k = Math.min(SIZE / src.height, maxW / src.width), W = Math.round(src.width * k), H = Math.round(src.height * k);
+    const c = canvasOf(W, H), x = c.getContext('2d'); x.imageSmoothingQuality = 'high'; x.drawImage(src, 0, 0, W, H);
+    const J = {}; for (const n in J0) if (J0[n] && J0[n].x != null) J[n] = { x: J0[n].x * k, y: J0[n].y * k };
+    const img = x.getImageData(0, 0, W, H), d = img.data;
+    const S = spec(J, W, H, d), sw = S.sw, bones = S.bones;
+    const names = Object.keys(bones), lab = new Int8Array(W * H).fill(-1);
     for (let py = 0; py < H; py++) for (let px = 0; px < W; px++) {
       const p = py * W + px; if (d[p * 4 + 3] < 8) continue;
-      if (inQuad(px, py)) { lab[p] = TORSO; continue; }
+      const f = S.force && S.force(px, py); if (f) { lab[p] = names.indexOf(f); continue; }
       let best = -1, bs = 1e9;
       names.forEach((n, i) => {
-        if (n === 'head' && py > J.neck.y + sw * 0.08) return;   // 頭只在脖子以上
-        if (n === 'torso' && py < J.neck.y - sw * 0.15) return;
+        if (S.allow && !S.allow(n, px, py)) return;
         let s = 1e9; for (const [a, b] of bones[n].segs) s = Math.min(s, segDist(px, py, a, b));
         s -= bones[n].bias || 0;
         if (s < bs) { bs = s; best = i; }
@@ -83,46 +94,107 @@ const Puppet = (() => {
       lab[p] = best;
     }
 
+    cleanSlivers(lab, W, H, names.length, Math.max(2, Math.round(Math.min(W, H) * 0.008)));
+
     // 關節處：上一層的部位多留一塊下一層的圓（例如身體留著肩膀），轉動時才不會出現缺口
-    const caps = [
-      ['torso', 'upperL', J.shL, 0.17], ['torso', 'upperR', J.shR, 0.17], ['torso', 'head', J.neck, 0.1],
-      ['torso', 'thighL', J.hipL, 0.2], ['torso', 'thighR', J.hipR, 0.2],
-      ['upperL', 'foreL', J.elL, 0.11], ['upperR', 'foreR', J.elR, 0.11], ['thighL', 'shinL', J.knL, 0.13], ['thighR', 'shinR', J.knR, 0.13],
-    ];
-    const bw = Math.max(3, Math.round(H * 0.017));   // 白色紙邊的寬度
+    const caps = S.caps;
+    const bw = Math.max(3, Math.round(SIZE * 0.017));   // 白色紙邊的寬度
     const parts = {};
     for (const n of names) {
       const id = names.indexOf(n), mine = caps.filter(c => c[0] === n).map(c => ({ child: names.indexOf(c[1]), p: c[2], r: c[3] * sw }));
       let x0 = W, y0 = H, x1 = -1, y1 = -1;
-      const take = new Uint8Array(W * H);
+      // take：1 = 自己的像素，0～1 之間 = 關節補片（越靠外圈越透明，轉動時才不會露出一塊硬邊）
+      const take = new Float32Array(W * H);
       for (let py = 0; py < H; py++) for (let px = 0; px < W; px++) {
         const p = py * W + px, l = lab[p]; if (l < 0) continue;
-        if (l === id || mine.some(m => m.child === l && Math.hypot(px - m.p.x, py - m.p.y) < m.r)) {
-          take[p] = 1; if (px < x0) x0 = px; if (px > x1) x1 = px; if (py < y0) y0 = py; if (py > y1) y1 = py;
-        }
+        let v = l === id ? 1 : 0;
+        if (!v) for (const m of mine) if (m.child === l) { const d = Math.hypot(px - m.p.x, py - m.p.y) / m.r; if (d < 1) v = Math.max(v, Math.min(1, (1 - d) / 0.35)); }
+        if (v > 0) { take[p] = v; if (px < x0) x0 = px; if (px > x1) x1 = px; if (py < y0) y0 = py; if (py > y1) y1 = py; }
+      }
+      // 交界處多畫 2 像素旁邊部位的顏色：縮放時邊緣半透明，兩塊疊起來才不會露出細細的白色裂縫
+      const ov = 2, rowD = new Uint8Array(W * H);
+      for (let py = 0; py < H; py++) for (let px = 0; px < W; px++) { let m = 0; for (let k = -ov; k <= ov && !m; k++) { const xx = px + k; if (xx >= 0 && xx < W && lab[py * W + xx] === id) m = 1; } rowD[py * W + px] = m; }
+      for (let py = 0; py < H; py++) for (let px = 0; px < W; px++) {
+        const p = py * W + px; if (take[p] >= 1 || lab[p] < 0) continue;
+        for (let k = -ov; k <= ov; k++) { const yy = py + k; if (yy >= 0 && yy < H && rowD[yy * W + px]) { take[p] = 1; break; } }
       }
       if (x1 < 0) { parts[n] = null; continue; }
       x0 -= bw + 1; y0 -= bw + 1; x1 += bw + 1; y1 += bw + 1;
       const pw = x1 - x0 + 1, ph = y1 - y0 + 1, pc = canvasOf(pw, ph), pctx = pc.getContext('2d'), pd = pctx.createImageData(pw, ph);
+      const own = canvasOf(pw, ph), octx = own.getContext('2d'), od = octx.createImageData(pw, ph);
       for (let py = Math.max(0, y0); py <= Math.min(H - 1, y1); py++) for (let px = Math.max(0, x0); px <= Math.min(W - 1, x1); px++) {
-        const p = py * W + px; if (!take[p]) continue;
-        const q = ((py - y0) * pw + (px - x0)) * 4; pd.data[q] = d[p * 4]; pd.data[q + 1] = d[p * 4 + 1]; pd.data[q + 2] = d[p * 4 + 2]; pd.data[q + 3] = d[p * 4 + 3];
+        const p = py * W + px, v = take[p]; if (!v) continue;
+        const q = ((py - y0) * pw + (px - x0)) * 4; pd.data[q] = d[p * 4]; pd.data[q + 1] = d[p * 4 + 1]; pd.data[q + 2] = d[p * 4 + 2]; pd.data[q + 3] = d[p * 4 + 3] * v;
+        if (lab[p] === id) od.data[q + 3] = d[p * 4 + 3];
       }
-      pctx.putImageData(pd, 0, 0);
-      // 紙邊：把部位往四周擴大 bw 像素、塗成紙的顏色
+      pctx.putImageData(pd, 0, 0); octx.putImageData(od, 0, 0);
+      // 紙邊：只用自己的像素往四周擴大 bw 像素、塗成紙的顏色（補片不描邊，不然轉動時關節旁邊會露出白色鋸齒）
       const border = canvasOf(pw, ph), bctx = border.getContext('2d');
-      for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2; bctx.drawImage(pc, Math.cos(a) * bw, Math.sin(a) * bw); }
-      bctx.drawImage(pc, 0, 0);
+      for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2; bctx.drawImage(own, Math.cos(a) * bw, Math.sin(a) * bw); }
+      bctx.drawImage(own, 0, 0);
       bctx.globalCompositeOperation = 'source-in'; bctx.fillStyle = '#fffdf5'; bctx.fillRect(0, 0, pw, ph);
       parts[n] = { img: pc, border, x: x0, y: y0 };
     }
+    return { parts, J, W, H, bw };
+  }
+
+  // ---- 人的骨架 ----
+  function humanSpec(J, W, H) {
+    const sw = Math.max(dist(J.shL, J.shR), H * 0.12);
+    // 肩膀到髖部圍起來的四邊形一定算身體（不然腋下的衣服會被分給手臂，舉手時跟著飛走）
+    const quad = [J.shL, J.shR, J.hipR, J.hipL];
+    const inQuad = (px, py) => { let s = 0; for (let i = 0; i < 4; i++) { const a = quad[i], b = quad[(i + 1) % 4], c = (b.x - a.x) * (py - a.y) - (b.y - a.y) * (px - a.x); if (c !== 0) { if (s && Math.sign(c) !== s) return false; s = Math.sign(c); } } return true; };
+    return {
+      sw,
+      // 每個部位的骨頭（線段）和偏好（bias 越大，越容易把旁邊的像素分給它）
+      bones: {
+        head: { segs: [[J.neck, J.top]], bias: sw * 0.22 },
+        torso: { segs: [[J.neck, J.pelvis]], bias: sw * 0.26 },
+        upperL: { segs: [[J.shL, J.elL]] }, foreL: { segs: [[J.elL, J.wrL], [J.wrL, J.hnL]] },
+        upperR: { segs: [[J.shR, J.elR]] }, foreR: { segs: [[J.elR, J.wrR], [J.wrR, J.hnR]] },
+        thighL: { segs: [[J.hipL, J.knL]] }, shinL: { segs: [[J.knL, J.anL], [J.anL, J.ftL]] },
+        thighR: { segs: [[J.hipR, J.knR]] }, shinR: { segs: [[J.knR, J.anR], [J.anR, J.ftR]] },
+      },
+      force: (px, py) => inQuad(px, py) ? 'torso' : null,
+      allow: (n, px, py) => !(n === 'head' && py > J.neck.y + sw * 0.08) &&                                        // 頭只在脖子以上
+        !(n === 'torso' && (py < J.neck.y - sw * 0.15 || py > J.pelvis.y + sw * 0.12)),                            // 身體不要伸到兩腿中間
+      caps: [
+        ['torso', 'upperL', J.shL, 0.17], ['torso', 'upperR', J.shR, 0.17], ['torso', 'head', J.neck, 0.1],
+        ['torso', 'thighL', J.hipL, 0.2], ['torso', 'thighR', J.hipR, 0.2],
+        ['torso', 'thighL', J.pelvis, 0.34], ['torso', 'thighR', J.pelvis, 0.34],   // 兩腿中間（裙子、褲襠）張腿時不會裂開
+        ['upperL', 'foreL', J.elL, 0.11], ['upperR', 'foreR', J.elR, 0.11], ['thighL', 'shinL', J.knL, 0.13], ['thighR', 'shinR', J.knR, 0.13],
+      ],
+    };
+  }
+  // J0.kind === 'pet' → 四腳動物（js/pet.js）
+  function build(src, J0) {
+    if (J0.kind === 'pet') return PetPuppet.build(src, J0, cutParts);
+    const r = cutParts(src, J0, humanSpec), J = r.J;
     const foot = Math.max(J.ftL.y, J.ftR.y, J.anL.y, J.anR.y);
-    return { parts, J, W, H, foot: { x: J.pelvis.x, y: Math.min(H, foot + bw) }, bw };
+    return Object.assign(r, { foot: { x: J.pelvis.x, y: Math.min(r.H, foot + r.bw) } });
+  }
+  // 頭、身體的位置（部位圖片座標）：揍揍紙片人判斷打到哪裡、貼 OK 繃用
+  function anchors(pup) {
+    if (pup.kind === 'pet') return PetPuppet.anchors(pup);
+    const J = pup.J, hr = (J.neck.y - J.top.y) * 0.55;
+    return { head: { x: (J.top.x + J.neck.x) / 2, y: (J.top.y + J.neck.y) / 2 }, headR: hr, body: { x: (J.neck.x + J.pelvis.x) / 2, y: (J.neck.y + J.pelvis.y) / 2 },
+      bodyRx: Math.max(Math.abs(J.shR.x - J.shL.x) * 0.65, pup.H * 0.1), bodyRy: (J.pelvis.y - J.neck.y) * 0.62 };
+  }
+  // 部位圖片座標 → 畫面上相對於腳底的位移（沒有擺姿勢的時候）
+  function toScreen(pup, height, p) {
+    const k = pup.kind === 'pet' ? PetPuppet.scaleOf(pup, height) : height / pup.H;
+    return { x: (p.x - pup.foot.x) * k, y: (p.y - pup.foot.y) * k, k };
+  }
+  // 畫在畫面上的大小（遊戲用來放籃子、算位置）
+  function size(pup, height) {
+    if (pup && pup.kind === 'pet') return PetPuppet.size(pup, height);
+    return { w: pup ? pup.W * height / pup.H : height * 0.5, h: height };
   }
 
   // 畫紙片人：(x, y) = 腳底中間的畫面座標，height = 人物在畫面上的高度
   function draw(ctx, pup, x, y, height, pose = {}, opt = {}) {
     if (!pup) return;
+    if (pup.kind === 'pet') return PetPuppet.draw(ctx, pup, x, y, height, pose, opt);
     const P = pup.parts, J = pup.J, k = height / pup.H;
     const g = n => pose[n] || 0;
     const sx = pose.sx == null ? 1 : pose.sx, sy = pose.sy == null ? 1 : pose.sy;
@@ -217,5 +289,5 @@ const Puppet = (() => {
   };
   const mix = (a, b, t) => { const o = {}; for (const n of new Set([...Object.keys(a), ...Object.keys(b)])) { const d = /^h?s[xy]$/.test(n) ? 1 : 0; o[n] = (a[n] == null ? d : a[n]) * (1 - t) + (b[n] == null ? d : b[n]) * t; } return o; };
 
-  return { build, draw, jointsFromLandmarks, makeDefault, Poses, mix };
+  return { build, draw, size, anchors, toScreen, jointsFromLandmarks, makeDefault, Poses, mix };
 })();

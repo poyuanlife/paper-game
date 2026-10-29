@@ -1,20 +1,43 @@
 'use strict';
 // =====================================================
 //  去背 + 找身體關節
-//  用 Google MediaPipe 姿勢偵測（Pose Landmarker），第一次使用時下載約 13 MB，之後瀏覽器會記住。
+//  人：Google MediaPipe 姿勢偵測（Pose Landmarker），第一次約 23 MB
+//  貓狗：MediaPipe 影像分割（DeepLab v3，認得貓、狗），第一次約 16 MB（兩種共用的核心 13.5 MB 只下載一次）
+//  之後瀏覽器會記住（離線也能用）。
 //  照片全部在這台裝置上處理，不會上傳。
 // =====================================================
 const Cutout = (() => {
   const MP_BASE = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.1.1';
   const MODEL = 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/latest/pose_landmarker_full.task';
-  let poseP = null, last = null;
+  const SEG_MODEL = 'https://storage.googleapis.com/mediapipe-models/image_segmenter/deeplab_v3/float32/latest/deeplab_v3.tflite';
+  const ANIMALS = ['cat', 'dog', 'horse', 'sheep', 'cow'];   // 狗有時會被認成羊、馬，一起算
+  let poseP = null, segP = null, visionP = null, last = null;
+
+  function getVision() {
+    if (!visionP) { visionP = (async () => { const mp = await import(`${MP_BASE}/vision_bundle.mjs`); return { mp, files: await mp.FilesetResolver.forVisionTasks(`${MP_BASE}/wasm`) }; })(); visionP.catch(() => { visionP = null; }); }
+    return visionP;
+  }
+  function getSeg(onMsg) {
+    if (segP) return segP;
+    segP = (async () => {
+      onMsg && onMsg('下載貓狗去背工具中（只有第一次，約 16 MB）…');
+      const { mp, files } = await getVision();
+      let err = null;
+      for (const delegate of ['GPU', 'CPU']) {
+        try { return await mp.ImageSegmenter.createFromOptions(files, { baseOptions: { modelAssetPath: SEG_MODEL, delegate }, runningMode: 'IMAGE', outputCategoryMask: false, outputConfidenceMasks: true }); }
+        catch (e) { err = e; }
+      }
+      throw err || new Error('無法啟動去背工具');
+    })();
+    segP.catch(() => { segP = null; });
+    return segP;
+  }
 
   function getPose(onMsg) {
     if (poseP) return poseP;
     poseP = (async () => {
-      onMsg && onMsg('下載去背工具中（只有第一次，約 13 MB）…');
-      const mp = await import(`${MP_BASE}/vision_bundle.mjs`);
-      const files = await mp.FilesetResolver.forVisionTasks(`${MP_BASE}/wasm`);
+      onMsg && onMsg('下載去背工具中（只有第一次，約 23 MB）…');
+      const { mp, files } = await getVision();
       let err = null;
       for (const delegate of ['GPU', 'CPU']) {
         try {
@@ -80,7 +103,8 @@ const Cutout = (() => {
   // 去背強度：0（寬鬆，保留多）～100（嚴格，切得乾淨）
   function applyCut(st, strength) {
     const { W, H, mw, mh, m } = st, img = new ImageData(new Uint8ClampedArray(st.rgba), W, H), d = img.data;
-    const lo = 0.1 + Math.max(0, Math.min(100, strength)) / 100 * 0.72, hi = Math.min(0.98, lo + 0.3), width = hi - lo;
+    // 貓狗模型的信心值整體比較低，同樣的滑桿位置要用比較低的門檻
+    const sv = Math.max(0, Math.min(100, strength)) / 100, lo = st.pet ? 0.02 + sv * 0.3 : 0.1 + sv * 0.72, hi = Math.min(0.98, lo + (st.pet ? 0.2 : 0.3)), width = hi - lo;
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
       const v = m[Math.min(mh - 1, Math.floor(y * mh / H)) * mw + Math.min(mw - 1, Math.floor(x * mw / W))];
       d[(y * W + x) * 4 + 3] = Math.round(Math.max(0, Math.min(1, (v - lo) / width)) * 255);
@@ -167,13 +191,20 @@ const Cutout = (() => {
   // 回傳 { canvas（透明背景，裁到人物範圍）, lm（33 個身體點，裁切後的像素座標）或 J（插圖模式估計的關節）, warn（提醒文字陣列） }
   function build(strength) {
     const st = last, img = st.bg ? drawCut(st, strength) : applyCut(st, strength), box = bbox(img, 128);
-    if (!box || box.w * box.h < st.W * st.H * 0.02) throw new Error(strength > 70 ? '去背太嚴格，人也被切掉了，請往「寬鬆」調。' : '照片裡找不到人。請拍全身、人站在畫面中間、光線充足。');
+    const who = st.pet ? '寵物' : '人';
+    if (!box || box.w * box.h < st.W * st.H * 0.02) throw new Error(strength > 70 ? `去背太嚴格，${who}也被切掉了，請往「寬鬆」調。` : st.pet ? '照片裡找不到貓或狗。請拍側面全身、光線充足。' : '照片裡找不到人。請拍全身、人站在畫面中間、光線充足。');
     const pad = Math.round(Math.max(box.w, box.h) * 0.03);
     const x0 = Math.max(0, box.x - pad), y0 = Math.max(0, box.y - pad), x1 = Math.min(st.W, box.x + box.w + pad), y1 = Math.min(st.H, box.y + box.h + pad);
     const out = canvasOf(x1 - x0, y1 - y0), octx = out.getContext('2d'); octx.putImageData(img, -x0, -y0);
     const warn = [];
     if (box.y + box.h >= st.H - 2) warn.push('腳好像被切到了，拍的時候腳下多留一點空間。');
     if (box.y <= 1) warn.push('頭頂好像被切到了。');
+    if (st.pet) {
+      const J = PetPuppet.guessJoints(octx.getImageData(0, 0, out.width, out.height));
+      if (st.bg) warn.push('這張看起來是插圖，用背景顏色去背。');
+      warn.push('頭、尾巴、腳的位置是自動猜的，不準的話按「🦴 調整關節」拖一下。');
+      return { canvas: out, J, warn, strength };
+    }
     if (!st.lm0) {
       warn.push('這張看起來是插圖，關節位置是用輪廓估計的。');
       return { canvas: out, J: guessJoints(octx.getImageData(0, 0, out.width, out.height)), warn, strength };
@@ -185,7 +216,8 @@ const Cutout = (() => {
   }
 
   // src：照片 Blob 或已經畫好的 canvas
-  async function cut(src, onMsg, strength = 45) {
+  async function cut(src, onMsg, strength = 45, mode = 'human') {
+    if (mode === 'pet') return cutPet(src, onMsg, strength);
     const pose = await getPose(onMsg);
     onMsg && onMsg('去背中…');
     await new Promise(r => setTimeout(r, 20));
@@ -205,6 +237,33 @@ const Cutout = (() => {
     last = { W, H, rgba: new Uint8ClampedArray(img.data), mw: mask.width, mh: mask.height, m: new Float32Array(mask.getAsFloat32Array()),
       lm0: r.landmarks[0].map(p => ({ x: p.x * W, y: p.y * H, v: p.visibility == null ? 1 : p.visibility })) };
     r.segmentationMasks.forEach(k => k.close && k.close());
+    return build(strength);
+  }
+
+  // 貓狗：影像分割的「貓 / 狗」信心值當成遮罩，之後跟人一樣用強度滑桿調
+  async function cutPet(src, onMsg, strength) {
+    const seg = await getSeg(onMsg);
+    onMsg && onMsg('去背中…');
+    await new Promise(r => setTimeout(r, 20));
+    const img = await toImageData(src, 1280), W = img.width, H = img.height;
+    const c = canvasOf(W, H); c.getContext('2d').putImageData(img, 0, 0);
+    const r = seg.segment(c), labels = seg.getLabels().map(s => s.toLowerCase());
+    const idx = ANIMALS.map(a => labels.indexOf(a)).filter(i => i >= 0 && r.confidenceMasks && r.confidenceMasks[i]);
+    let m = null, mw = 0, mh = 0, n = 0;
+    if (idx.length) {
+      const first = r.confidenceMasks[idx[0]]; mw = first.width; mh = first.height; m = new Float32Array(mw * mh);
+      for (const i of idx) { const a = r.confidenceMasks[i].getAsFloat32Array(); for (let p = 0; p < a.length; p++) if (a[p] > m[p]) m[p] = a[p]; }
+      for (let p = 0; p < m.length; p++) if (m[p] > 0.5) n++;
+    }
+    if (r.close) r.close(); else (r.confidenceMasks || []).forEach(k => k.close && k.close());
+    if (!m || n < mw * mh * 0.01) {
+      const bg = plainBg(img);
+      if (!bg) throw new Error('照片裡找不到貓或狗。請拍側面全身、背景單純一點、光線充足。');
+      onMsg && onMsg('插圖模式去背中…');
+      last = { W, H, rgba: new Uint8ClampedArray(img.data), bg, pet: true };
+      return build(strength);
+    }
+    last = { W, H, rgba: new Uint8ClampedArray(img.data), mw, mh, m, pet: true };
     return build(strength);
   }
 

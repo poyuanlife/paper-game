@@ -56,7 +56,7 @@ registerGame({
     this.obs = this.obs.filter(o => o.x > -150); this.items = this.items.filter(c => c.x > -50 && !c.got);
 
     // 碰撞（判定比畫面小一點，比較公平）
-    const hb = { x0: this.px - 26, x1: this.px + 26, y0: p.y + 8, y1: p.y + this.PH * 0.86 };
+    const hb = { x0: this.px - 26, x1: this.px + 26, y0: p.y + 8, y1: p.y + Puppet.size(App.pup, this.PH).h * 0.86 };
     for (const o of this.obs) {
       const y0 = o.k === 'bird' ? o.y : 0, y1 = y0 + o.h, pad = 8;
       if (hb.x1 > o.x - o.w / 2 + pad && hb.x0 < o.x + o.w / 2 - pad && hb.y1 > y0 + pad && hb.y0 < y1 - pad) {

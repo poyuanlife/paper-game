@@ -102,7 +102,7 @@ const Paper = (() => {
     const g = c.createLinearGradient(0, 0, 0, V.H); g.addColorStop(0, T.sky[0]); g.addColorStop(1, T.sky[1]);
     c.fillStyle = g; c.fillRect(-20, -20, V.W + 40, V.H + 40);
     // 太陽
-    circle(c, V.W - 120, 110, 46, '#ffe07a', { border: 5, blur: 10, shadowColor: 'rgba(255,170,40,0.4)' });
+    circle(c, V.W - (V.W < 700 ? 90 : 120), V.W < 700 ? 190 : 110, V.W < 700 ? 40 : 46, '#ffe07a', { border: 5, blur: 10, shadowColor: 'rgba(255,170,40,0.4)' });
     // 雲
     for (let i = 0; i < 5; i++) {
       const sp = 0.05 + i * 0.02, span = V.W + 260, x = ((i * 397 - scroll * sp - t * 12) % span + span) % span - 220, y = 50 + (i * 71) % 170, s = 0.6 + (i % 3) * 0.25;
@@ -170,13 +170,18 @@ const App = {
     $('hud').classList.toggle('hidden', !(this.state === 'play' || this.state === 'pause'));
   },
   go(state) {
+    const prev = this.state, g = this.game;
     this.state = state; this.stateT = 0;
+    // 讓遊戲知道開始 / 離開遊玩（例如節奏遊戲要停音樂）
+    if (g && prev === 'play' && state !== 'play' && g.onLeave) g.onLeave(state);
+    if (g && state === 'play' && prev !== 'play' && g.onEnter) g.onEnter(prev);
     const map = { home: 'scrHome', select: 'scrSelect', maker: 'scrMaker', cam: 'scrCam', ready: 'scrReady', pause: 'scrPause', result: 'scrResult', play: null };
     this.show(map[state]);
     if (state === 'select') renderGameList();
     if (state === 'home') FX.clear();
   },
   startGame(g) {
+    if (this.game && this.game.onLeave && this.state === 'play') this.game.onLeave('restart');
     this.game = g; FX.clear(); g.start();
     $('rdName').textContent = g.name; $('rdHow').textContent = g.howto; $('rdIcon').textContent = g.icon;
     const b = Store.best(g.id); $('rdBest').textContent = b ? `最高分：${b}` : '';
@@ -208,6 +213,15 @@ const App = {
     const h = g.hud(); $('hudL').innerHTML = h.L || ''; $('hudR').innerHTML = h.R || '';
   },
   async setPuppet(src) { this.pup = Puppet.build(src.canvas, src.J); },
+  // 角色：'me' 人、'pet' 寵物、'default' 預設紙娃娃
+  chars: { me: null, pet: null }, charSlot: 'default',
+  useChar(slot, pup) {
+    if (slot !== 'default' && !this.chars[slot]) slot = 'default';
+    this.charSlot = slot; Store.set('active', slot);
+    if (pup) this.pup = pup;
+    else { const src = slot === 'default' ? Puppet.makeDefault() : this.chars[slot]; this.pup = Puppet.build(src.canvas, src.J); }
+    syncCharBtn();
+  },
 };
 
 function renderGameList() {
@@ -273,14 +287,67 @@ $('scrReady').addEventListener('pointerdown', e => { if (e.target.closest('butto
 const syncSound = () => { $('bSound').textContent = Sfx.on ? '🔊' : '🔈'; };
 $('bSound').onclick = () => { Sfx.toggle(); syncSound(); Sfx.play('click'); };
 
+// ---- 分享：把紙片人 + 分數做成一張圖 ----
+async function shareResult() {
+  const g = App.game; if (!g) return;
+  const W = 1080, H = 1350, c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
+  const bg = x.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, '#9fd8ef'); bg.addColorStop(1, '#e8f6e9'); x.fillStyle = bg; x.fillRect(0, 0, W, H);
+  Paper.circle(x, W - 140, 600, 70, '#ffe07a', { border: 8, blur: 14 });
+  Paper.shape(x, cc => { cc.moveTo(-20, H + 20); cc.lineTo(-20, H - 260); cc.quadraticCurveTo(W * 0.3, H - 340, W * 0.55, H - 270); cc.quadraticCurveTo(W * 0.8, H - 210, W + 20, H - 280); cc.lineTo(W + 20, H + 20); cc.closePath(); }, '#7dbb5c', { border: 8 });
+  const font = (s, w = 900) => `${w} ${s}px "Noto Sans TC", system-ui, sans-serif`;
+  const txt = (s, X, Y, size, col, edge = 14) => { x.font = font(size); x.textAlign = 'center'; x.textBaseline = 'middle'; x.lineJoin = 'round'; x.lineWidth = edge; x.strokeStyle = Paper.PAPER; x.strokeText(s, X, Y); x.fillStyle = col; x.fillText(s, X, Y); };
+  Paper.rect(x, 90, 70, W - 180, 150, g.color, 30, { border: 10 });
+  txt(`${g.icon} ${g.name}`, W / 2, 145, 72, '#fff', 0);
+  txt(`${Math.floor(g.score || 0)}`, W / 2, 330, 170, '#e0573c', 22);
+  txt(g.overText || '', W / 2, 455, 48, '#4a3520', 12);
+  Puppet.draw(x, App.pup, W / 2, H - 120, 700, App.resultNew ? Puppet.Poses.cheer(0.13) : Puppet.Poses.dance(0.3));
+  txt('紙片人遊樂園', W / 2, H - 70, 46, '#e0573c', 12);
+  const blob = await new Promise(r => c.toBlob(r, 'image/png')), name = `紙片人-${g.id}-${Math.floor(g.score || 0)}.png`;
+  try {
+    const file = new File([blob], name, { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: '紙片人遊樂園', text: `我在「${g.name}」拿到 ${Math.floor(g.score || 0)} 分！` }); return; }
+  } catch (e) { if (e && e.name === 'AbortError') return; }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
+$('rsShare').onclick = () => { Sfx.play('click'); shareResult(); };
+
+// ---- PWA：離線也能玩、可以加到主畫面 ----
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+let installEvt = null;
+const standalone = () => matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches || navigator.standalone;
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; $('bInstall').classList.remove('hidden'); });
+addEventListener('appinstalled', () => { installEvt = null; $('bInstall').classList.add('hidden'); $('installTip').classList.add('hidden'); });
+if (isIOS && !standalone()) $('bInstall').classList.remove('hidden');
+$('bInstall').onclick = async () => {
+  Sfx.play('click');
+  if (installEvt) { try { installEvt.prompt(); await installEvt.userChoice; installEvt = null; $('bInstall').classList.add('hidden'); return; } catch (e) {} }
+  $('installTip').innerHTML = !isIOS ? '請用瀏覽器選單裡的「安裝應用程式」或「加到主畫面」。' : 'iPhone / iPad：用 <b>Safari</b> 開這個網頁 → 點下面的 <b>分享</b> 按鈕（方塊加箭頭）→ 選 <b>加入主畫面</b>。';
+  $('installTip').classList.toggle('hidden');
+};
+
+// ---- 換角色（人 / 寵物 / 預設）----
+const CHAR_NAMES = { me: '🧍 我', pet: '🐶 寵物', default: '🧒 預設' };
+function charCycle() { return ['me', 'pet', 'default'].filter(s => s === 'default' || App.chars[s]); }
+function syncCharBtn() {
+  const list = charCycle(), b = $('bChar');
+  b.classList.toggle('hidden', list.length < 2);
+  b.textContent = `🔄 換角色（現在：${CHAR_NAMES[App.charSlot].slice(2).trim()}）`;
+  $('bMake').textContent = App.chars.me || App.chars.pet ? '📷 換 / 做紙片人' : '📷 做我的紙片人';
+}
+$('bChar').onclick = () => {
+  Sfx.play('click'); const list = charCycle(), i = list.indexOf(App.charSlot);
+  App.useChar(list[(i + 1) % list.length]); FX.burst(V.W / 2, V.H * 0.6, 16, undefined, 0.7);
+};
+
 // ---- 開始 ----
 addEventListener('resize', resize);
 resize(); syncSound();
 (async () => {
-  const saved = await Store.loadChar();
-  App.setPuppet(saved || Puppet.makeDefault());
-  App.hasPhoto = !!saved;
-  $('bMake').textContent = saved ? '📷 換我的紙片人' : '📷 做我的紙片人';
+  const [me, pet] = await Promise.all([Store.loadChar('me'), Store.loadChar('pet')]);
+  App.chars = { me, pet };
+  try { App.useChar(Store.get('active', me ? 'me' : pet ? 'pet' : 'default')); } catch (e) { console.error(e); App.useChar('default'); }
   App.go('home');
   requestAnimationFrame(frame);
   if (/#play-(\w+)/.test(location.hash)) { const g = GAMES.find(g => g.id === RegExp.$1); if (g) App.startGame(g); }

@@ -34,26 +34,26 @@ registerGame({
   get px() { return V.W / 2 + Math.sin(this.t * this.swaySp) * this.swayR + this.sp.dodge; },
   say(kind, force) { if (!force && this.bubble && this.bubble.t < 0.9) return; this.bubble = { s: pick(this.LINES[kind]), t: 0 }; },
 
-  // 紙片人身上各部位在畫面上的位置（只看高度，不管旋轉）
+  // 頭、身體在畫面上的位置（相對紙片人腳底；人和寵物都適用，不管旋轉）
   zones() {
-    const P = App.pup, k = this.PH / P.H, J = P.J, fy = this.floor, f = P.foot.y;
-    const Y = v => fy - (f - v) * k;
-    return { top: Y(J.top.y), neck: Y(J.neck.y), pelvis: Y(J.pelvis.y), headR: (J.neck.y - J.top.y) * k * 0.55, bodyR: Math.max(Math.abs(J.shR.x - J.shL.x) * k * 0.65, this.PH * 0.1) };
+    const P = App.pup, A = Puppet.anchors(P), h = Puppet.toScreen(P, this.PH, A.head), b = Puppet.toScreen(P, this.PH, A.body), k = h.k, fy = this.floor;
+    const headR = A.headR * k;
+    return { hx: h.x, hy: fy + h.y, headR, top: fy + h.y - headR, bx: b.x, by: fy + b.y, bodyRx: A.bodyRx * k, bodyRy: A.bodyRy * k };
   },
 
   tap(x, y) {
     if (this.st !== 'fight' && this.st !== 'enter') return;
-    const z = this.zones(), dx = x - this.px;
+    const z = this.zones(), px = this.px;
     let part = null;
-    if (y > z.top - 20 && y < z.neck && Math.abs(dx) < z.headR * 1.25) part = 'head';
-    else if (y >= z.neck && y < z.pelvis + this.PH * 0.08 && Math.abs(dx) < z.bodyR) part = 'body';
+    if (Math.hypot(x - px - z.hx, y - z.hy) < z.headR * 1.3) part = 'head';
+    else if (Math.pow((x - px - z.bx) / z.bodyRx, 2) + Math.pow((y - z.by) / z.bodyRy, 2) < 1.25) part = 'body';
     this.punch(x, y, part);
   },
   key(k) {
     if (this.st !== 'fight') return;
     const z = this.zones();
-    if (k === 'space' || k === 'arrowup' || k === 'w' || k === 'z' || k === 'x') this.punch(this.px + rand(-10, 10), (z.top + z.neck) / 2, 'head');
-    if (k === 'arrowdown' || k === 's' || k === 'c') this.punch(this.px + rand(-10, 10), (z.neck * 0.4 + z.pelvis * 0.6), 'body');
+    if (k === 'space' || k === 'arrowup' || k === 'w' || k === 'z' || k === 'x') this.punch(this.px + z.hx + rand(-10, 10), z.hy, 'head');
+    if (k === 'arrowdown' || k === 's' || k === 'c') this.punch(this.px + z.bx + rand(-10, 10), z.by, 'body');
   },
 
   punch(x, y, part) {
@@ -73,7 +73,7 @@ registerGame({
     if (!p.part) { Sfx.play('whiff'); this.combo = 0; return; }
     if (p.part === 'head' && this.guard > 0) {
       Sfx.play('block'); sp.rotV += dir * 1.5; FX.text(p.x, p.y - 40, '擋住！', '#4d6bd9', 34); this.say('guard');
-      if (!this.hintGuard) { this.hintGuard = true; FX.text(this.px, this.zones().pelvis, '打肚子！', '#e0573c', 40); }
+      if (!this.hintGuard) { this.hintGuard = true; const z = this.zones(); FX.text(this.px + z.bx, z.by + z.bodyRy, '打肚子！', '#e0573c', 40); }
       this.combo = 0; return;
     }
     this.combo = this.t - this.lastHit < 0.8 ? this.combo + 1 : 1; this.lastHit = this.t;
@@ -91,10 +91,10 @@ registerGame({
     if (this.combo >= 3) FX.text(p.x, p.y + 50, `${this.combo} 連打！`, '#ff8a00', 26);
     FX.burst(p.x, p.y, crit ? 16 : 7, ['#ffd23f', '#fff6c8', '#ff6b6b'], crit ? 1 : 0.6);
     // OK 繃
-    const P = App.pup, J = P.J;
+    const A = Puppet.anchors(App.pup);
     if (this.stickers.length < 10 && Math.random() < 0.75) {
-      if (head) { const c = { x: J.neck.x + (J.top.x - J.neck.x) * 0.5, y: J.top.y + (J.neck.y - J.top.y) * rand(0.3, 0.7) }; this.stickers.push({ part: 'head', x: c.x + rand(-1, 1) * (J.neck.y - J.top.y) * 0.22, y: c.y, r: rand(-0.8, 0.8) }); }
-      else this.stickers.push({ part: 'torso', x: J.pelvis.x + rand(-1, 1) * Math.abs(J.shR.x - J.shL.x) * 0.3, y: J.neck.y + (J.pelvis.y - J.neck.y) * rand(0.3, 0.8), r: rand(-0.8, 0.8) });
+      if (head) this.stickers.push({ part: 'head', x: A.head.x + rand(-1, 1) * A.headR * 0.4, y: A.head.y + rand(-0.6, 0.6) * A.headR * 0.4, r: rand(-0.8, 0.8) });
+      else this.stickers.push({ part: 'torso', x: A.body.x + rand(-1, 1) * A.bodyRx * 0.45, y: A.body.y + rand(-0.6, 0.8) * A.bodyRy * 0.5, r: rand(-0.8, 0.8) });
     }
     for (const c of this.crowd) c.j = 0.4;
     if (this.hp <= 0) this.knockout(dir); else this.say(head ? 'hit' : 'body');
@@ -223,7 +223,7 @@ registerGame({
       },
     });
     // 對話框
-    if (this.st !== 'ko' || this.stT < 0.8) { const z = this.zones(); this.drawBubble(c, (this.st === 'ko' ? x : this.px) + z.headR * 0.9, (this.st === 'ko' ? y - this.PH : z.top) + 10); }
+    if (this.st !== 'ko' || this.stT < 0.8) { const z = this.zones(); this.drawBubble(c, (this.st === 'ko' ? x : this.px) + z.hx + z.headR * 0.9, (this.st === 'ko' ? y - this.PH : z.top) + 10); }
     // 打擊字
     for (const p of this.pows || []) {
       const s = (p.big ? 1.5 : 1) * (0.6 + Math.min(1, p.t * 12) * 0.6);

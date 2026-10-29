@@ -16,17 +16,18 @@ const Store = (() => {
     const d = await db();
     return new Promise((ok, no) => { const t = d.transaction('chars', mode), q = fn(t.objectStore('chars')); t.oncomplete = () => ok(q && q.result); t.onerror = () => no(t.error); });
   }
-  const saveChar = (canvas, J) => new Promise(ok => canvas.toBlob(ok, 'image/png')).then(blob => op('readwrite', s => s.put({ blob, J, t: Date.now() }, 'me')));
-  async function loadChar() {
+  // 角色存檔位置：'me' = 人、'pet' = 寵物
+  const saveChar = (canvas, J, slot = 'me') => new Promise(ok => canvas.toBlob(ok, 'image/png')).then(blob => op('readwrite', s => s.put({ blob, J, t: Date.now() }, slot)));
+  async function loadChar(slot = 'me') {
     try {
-      const v = await op('readonly', s => s.get('me'));
+      const v = await op('readonly', s => s.get(slot));
       if (!v || !v.blob) return null;
       const bmp = await createImageBitmap(v.blob), c = document.createElement('canvas');
       c.width = bmp.width; c.height = bmp.height; c.getContext('2d').drawImage(bmp, 0, 0);
       return { canvas: c, J: v.J };
     } catch (e) { return null; }
   }
-  const clearChar = () => op('readwrite', s => s.delete('me')).catch(() => {});
+  const clearChar = (slot = 'me') => op('readwrite', s => s.delete(slot)).catch(() => {});
 
   const get = (k, d) => { try { const v = localStorage.getItem('paper.' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } };
   const set = (k, v) => { try { localStorage.setItem('paper.' + k, JSON.stringify(v)); } catch (e) {} };
@@ -73,5 +74,8 @@ const Sfx = (() => {
     bell: () => { [0, 0.28, 0.56].forEach(d => { tone(1320, 1300, 0.5, 'triangle', 0.18, d); tone(2640, 2600, 0.3, 'sine', 0.05, d); }); },
     boing: () => tone(180, 520, 0.35, 'sine', 0.2),
   };
-  return { play: n => { try { play[n] && play[n](); } catch (e) {} }, unlock: ctx, get on() { return on; }, toggle() { on = !on; Store.set('sound', on); return on; } };
+  // 手機震動（Android 才有；跟著音效開關）
+  const VIB = { hit: 60, boom: 120, punch: 25, crit: 70, block: 15, over: 40 };
+  const buzz = n => { if (on && VIB[n] && navigator.vibrate) try { navigator.vibrate(VIB[n]); } catch (e) {} };
+  return { play: n => { try { play[n] && play[n](); buzz(n); } catch (e) {} }, unlock: ctx, get on() { return on; }, toggle() { on = !on; Store.set('sound', on); return on; } };
 })();

@@ -17,7 +17,8 @@ registerGame({
   },
   get ground() { return V.H * 0.93; },
   PH: 160,
-  get basket() { return { x: this.x + this.vx * 0.012, y: this.ground - this.PH * 1.17, w: 120 }; },
+  // 籃子：人舉在頭上；寵物背在背上
+  get basket() { const pet = App.pup.kind === 'pet'; return { x: this.x + this.vx * 0.012, y: this.ground - (pet ? Puppet.size(App.pup, this.PH).h * 0.95 + 4 : this.PH * 1.17), w: 120 }; },
 
   spawn() {
     const r = Math.random(), bombP = Math.min(0.3, 0.12 + this.t / 200);
@@ -88,7 +89,7 @@ registerGame({
     for (const s of this.splats) { c.globalAlpha = 1 - s.t / 1.5; c.fillStyle = s.c; c.beginPath(); c.ellipse(s.x, gy, 26, 7, 0, 0, Math.PI * 2); c.fill(); c.globalAlpha = 1; }
 
     const P = Puppet.Poses, moving = Math.abs(this.vx) > 60;
-    let pose = P.carry(this.t, clamp(this.vx / 900, -1, 1), moving);
+    let pose = App.pup.kind === 'pet' ? (moving ? P.run(this.t) : P.idle(this.t)) : P.carry(this.t, clamp(this.vx / 900, -1, 1), moving);
     if (this.hurt) pose = Puppet.mix(pose, P.hurt(0.8 - this.hurt), Math.min(1, this.hurt * 2));
     pose.sx = this.sx * (pose.sx || 1);
     c.fillStyle = 'rgba(60,40,10,0.22)'; c.beginPath(); c.ellipse(this.x, gy + 2, 40, 9, 0, 0, Math.PI * 2); c.fill();
