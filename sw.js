@@ -3,7 +3,7 @@
 //  - 去背工具、字型（CDN）：存起來就一直用（檔案很大、不會變）
 // 新增檔案時記得加進 SHELL，並把 VERSION 加一。
 'use strict';
-const VERSION = 'paper-v6';
+const VERSION = 'paper-v7';
 const SHELL = [
   './', 'index.html', 'manifest.webmanifest', 'css/style.css',
   'js/store.js', 'js/cutout.js', 'js/puppet.js', 'js/pet.js', 'js/main.js', 'js/kidkit.js', 'js/tilt.js', 'js/maker.js',

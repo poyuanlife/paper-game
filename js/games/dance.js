@@ -1,33 +1,50 @@
 'use strict';
 // 紙片人跳舞（節奏遊戲）：音樂用 WebAudio 現場合成。音符掉到下面的圓圈時點那一條，紙片人就跳出對應的舞步。
 // 音符的左 / 中 / 右跟著旋律走：音往下 = 左、一樣高 = 中、往上 = 右。
+// 開始時先選歌（5 首，速度和風格不同）和難度（簡單 / 普通 / 困難），每首歌每個難度各記最高分。
 registerGame({
   id: 'dance', name: '紙片人跳舞', icon: '💃', color: '#c77dff',
   desc: '跟著音樂的節拍點，讓紙片人跳舞！',
-  howto: '音符掉到下面的圓圈時，點那一條（或用 ← ↑ → 鍵）。點得越準分數越高，連擊越多加成越大。兩個音符一起來就兩邊一起點！記得開聲音。',
-  BPM: 112,
-  TRAVEL: 1.4,   // 音符從上面掉到圓圈要幾秒
+  howto: '先選一首歌和難度。音符掉到下面的圓圈時，點那一條（或用 ← ↑ → 鍵）。點得越準分數越高，連擊越多加成越大。兩個音符一起來就兩邊一起點！記得開聲音。',
+  SONGS: [
+    { id: 'party', name: '開心派對', icon: '🎉', bpm: 112, key: 0, prog: ['I', 'vi', 'IV', 'V'], seed: 20261028, lead: 'square', drums: 'pop', tag: '輕快流行' },
+    { id: 'beach', name: '夏日海灘', icon: '🏖️', bpm: 100, key: 5, prog: ['I', 'IV', 'vi', 'V'], seed: 777, lead: 'triangle', drums: 'reggae', tag: '悠閒搖擺' },
+    { id: 'lullaby', name: '星空搖籃曲', icon: '🌙', bpm: 84, key: 7, prog: ['vi', 'IV', 'I', 'V'], seed: 31415, lead: 'sine', drums: 'soft', tag: '慢慢來' },
+    { id: 'march', name: '紙片進行曲', icon: '🥁', bpm: 120, key: -2, prog: ['I', 'IV', 'V', 'I'], seed: 4242, lead: 'square', drums: 'march', tag: '精神抖擻' },
+    { id: 'rocket', name: '火箭衝衝衝', icon: '🚀', bpm: 140, key: 2, prog: ['vi', 'IV', 'I', 'V'], seed: 9001, lead: 'sawtooth', drums: 'rock', tag: '超快！' },
+  ],
+  CH: { I: [48, 52, 55], ii: [50, 53, 57], IV: [41, 45, 48], V: [43, 47, 50], vi: [45, 48, 52] },
+  // lv：四段各用第幾級的節奏；travel：音符掉下來要幾秒；win：判定寬鬆度；dbl：兩邊一起按的多寡
+  DIFFS: [
+    { name: '簡單', c: '#45ad4a', lv: [0, 1, 1, 2], travel: 1.8, win: 1.3, dbl: 0 },
+    { name: '普通', c: '#ff9f1c', lv: [1, 2, 3, 4], travel: 1.4, win: 1, dbl: 1 },
+    { name: '困難', c: '#e8453c', lv: [2, 3, 4, 5], travel: 1.05, win: 0.85, dbl: 1.6 },
+  ],
+  TRAVEL: 1.4, win: 1,
+  // 每一級：每小節的節奏（第幾個八分音符有音符），越後面越密
+  PATS: [
+    [[0], [0, 4], [0, 4], [0]],
+    [[0, 4], [0, 4], [0, 2, 4], [0, 4, 6]],
+    [[0, 2, 4, 6], [0, 2, 4], [0, 3, 4, 6], [0, 2, 4, 6]],
+    [[0, 2, 3, 4, 6], [0, 2, 4, 5, 6], [0, 1, 2, 4, 6], [0, 2, 4, 6, 7]],
+    [[0, 1, 2, 4, 5, 6], [0, 2, 3, 4, 6, 7], [0, 1, 2, 3, 4, 6], [0, 2, 4, 5, 6, 7]],
+    [[0, 1, 2, 3, 4, 5, 6], [0, 1, 2, 4, 5, 6, 7], [0, 1, 2, 3, 4, 6, 7], [0, 1, 2, 3, 4, 5, 6, 7]],
+  ],
   LANES: [{ c: '#ff6b6b', key: '←' }, { c: '#ffc23d', key: '★' }, { c: '#4d96ff', key: '→' }],
   GRADES: [{ w: 0.05, s: 'PERFECT', c: '#ff4fa3', pts: 100, acc: 1 }, { w: 0.1, s: 'GREAT', c: '#ff9f1c', pts: 70, acc: 0.75 }, { w: 0.17, s: 'GOOD', c: '#2fa7e0', pts: 40, acc: 0.45 }],
 
   // ---- 歌曲：前奏 2 小節 → 四段越來越難 → 結尾。每次玩都一樣（固定亂數種子），練習會進步 ----
-  build() {
-    if (this.song) return this.song;
-    let seed = 20261028;
+  build(si0, di) {
+    const SG = this.SONGS[si0], D = this.DIFFS[di];
+    let seed = SG.seed + di * 7919;
     const rnd = () => { seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
-    const B = 60 / this.BPM, E = B / 2;
-    const PROG = [[48, 52, 55], [45, 48, 52], [41, 45, 48], [43, 47, 50]];   // C  Am  F  G
-    const SCALE = [60, 62, 64, 67, 69, 72, 74, 76, 79, 81];                  // C 大調五聲音階
-    // pats：每小節的節奏（第幾個八分音符有音符），dbl：小節第一拍變成左右一起按的機率
-    const SECT = [
-      { bars: 2 },
-      { bars: 8, pats: [[0, 4], [0, 4], [0, 2, 4], [0, 4, 6]], dbl: 0 },
-      { bars: 8, pats: [[0, 2, 4, 6], [0, 2, 4], [0, 3, 4, 6], [0, 2, 4, 6]], dbl: 0.12 },
-      { bars: 8, pats: [[0, 2, 3, 4, 6], [0, 2, 4, 5, 6], [0, 1, 2, 4, 6], [0, 2, 4, 6, 7]], dbl: 0.2 },
-      { bars: 8, pats: [[0, 1, 2, 4, 5, 6], [0, 2, 3, 4, 6, 7], [0, 1, 2, 3, 4, 6], [0, 2, 4, 5, 6, 7]], dbl: 0.25 },
-      { bars: 2, end: true },
-    ];
-    const ev = [], notes = []; let bar = 0, mi = 5;
+    const rpick = a => a[Math.floor(rnd() * a.length)];
+    const B = 60 / SG.bpm, E = B / 2, K = SG.key;
+    const PROG = SG.prog.map(n => this.CH[n].map(x => x + K));
+    const SCALE = [60, 62, 64, 67, 69, 72, 74, 76, 79, 81].map(x => x + K);   // 五聲音階
+    const nb = SG.bpm < 100 ? 6 : 8, DBL = [0, 0.12, 0.2, 0.25];
+    const SECT = [{ bars: 2 }, ...D.lv.map((l, i) => ({ bars: nb, pats: this.PATS[l], dbl: DBL[i] * D.dbl })), { bars: 2, end: true }];
+    const dr = SG.drums, ev = [], notes = []; let bar = 0, mi = 5;
     SECT.forEach((S, si) => {
       for (let b = 0; b < S.bars; b++, bar++) {
         const t0 = bar * 4 * B, ch = PROG[bar % 4];
@@ -35,46 +52,48 @@ registerGame({
           if (b === 0) {
             ev.push({ t: t0, k: 'kick' }, { t: t0, k: 'crash' }, { t: t0, k: 'bass', n: ch[0] - 12, d: B * 3 });
             ch.forEach(n => ev.push({ t: t0, k: 'pad', n: n + 12, d: B * 4 }));
-            ev.push({ t: t0, k: 'lead', n: 72, d: B * 2 });
+            ev.push({ t: t0, k: 'lead', n: SCALE[5], d: B * 2, w: SG.lead });
             notes.push({ t: t0, lane: 0 }, { t: t0, lane: 2 });
           }
           continue;
         }
-        // 鼓、貝斯、和弦
+        // 鼓（每首歌風格不同）、貝斯、和弦
         for (let p = 0; p < 8; p++) {
           const t = t0 + p * E;
-          if (p === 0 || p === 4 || (si >= 3 && p === 7)) ev.push({ t, k: 'kick' });
-          if (si >= 1 && (p === 2 || p === 6)) ev.push({ t, k: 'snare' });
-          ev.push({ t, k: 'hat', v: p % 2 ? 1 : 0.6 });
-          if (si >= 1) ev.push({ t, k: 'bass', n: ch[0] - 12 + (p % 2 ? 12 : 0), d: E * 0.8 });
-          if (si >= 2 && p % 2) ch.forEach(n => ev.push({ t, k: 'pad', n: n + 12, d: E * 0.6 }));
+          if (dr === 'rock') { if (p % 2 === 0) ev.push({ t, k: 'kick' }); if (si >= 1 && (p === 2 || p === 6)) ev.push({ t, k: 'snare', v: 1 }); ev.push({ t, k: 'hat', v: p % 2 ? 1.1 : 0.7 }); }
+          else if (dr === 'reggae') { if (p === 0 || p === 4) ev.push({ t, k: 'kick' }); if (si >= 1 && p === 4) ev.push({ t, k: 'snare', v: 0.8 }); if (p % 2) ev.push({ t, k: 'hat', v: 1.3 }); }
+          else if (dr === 'soft') { if (p === 0 || (si >= 2 && p === 4)) ev.push({ t, k: 'kick', v: 0.6 }); if (si >= 3 && p === 4) ev.push({ t, k: 'snare', v: 0.45 }); if (p % 2 === 0) ev.push({ t, k: 'hat', v: 0.45 }); }
+          else if (dr === 'march') { if (p === 0 || p === 4) ev.push({ t, k: 'kick' }); if (si >= 1 && (p === 2 || p === 6 || (si >= 2 && (p === 3 || p === 7)))) ev.push({ t, k: 'snare', v: p % 2 ? 0.6 : 1 }); if (p % 2 === 0) ev.push({ t, k: 'hat', v: 0.6 }); }
+          else { if (p === 0 || p === 4 || (si >= 3 && p === 7)) ev.push({ t, k: 'kick' }); if (si >= 1 && (p === 2 || p === 6)) ev.push({ t, k: 'snare', v: 1 }); ev.push({ t, k: 'hat', v: p % 2 ? 1 : 0.6 }); }
+          if (si >= 1) ev.push({ t, k: 'bass', n: ch[0] - 12 + (dr === 'soft' ? 0 : p % 2 ? 12 : 0), d: E * (dr === 'soft' ? 1.8 : 0.8) });
+          if (si >= 2 && p % 2 && dr !== 'soft') ch.forEach(n => ev.push({ t, k: 'pad', n: n + 12, d: E * 0.6 }));
         }
-        if (si === 1) ch.forEach(n => ev.push({ t: t0, k: 'pad', n: n + 12, d: B * 3.8, soft: 1 }));
+        if (si === 1 || dr === 'soft') ch.forEach(n => ev.push({ t: t0, k: 'pad', n: n + 12, d: B * 3.8, soft: 1 }));
         if (b === 0 && si >= 2) ev.push({ t: t0, k: 'crash' });
         // 旋律 = 音符
         if (!S.pats) continue;
-        const pat = S.pats[Math.floor(rnd() * S.pats.length)], pcs = ch.map(n => n % 12);
+        const pat = rpick(S.pats), pcs = ch.map(n => n % 12);
         for (const p of pat) {
           const t = t0 + p * E, prev = mi;
           if (p === 0 || p === 4) {   // 強拍：找最近的和弦音
             let best = mi, bd = 99;
             SCALE.forEach((n, i) => { if (pcs.includes(n % 12)) { const d = Math.abs(i - mi) + rnd() * 1.5; if (d < bd && i !== mi) { bd = d; best = i; } } });
             mi = best;
-          } else mi = clamp(mi + pick([-2, -1, -1, 0, 1, 1, 2]), 0, SCALE.length - 1);
+          } else mi = clamp(mi + rpick([-2, -1, -1, 0, 1, 1, 2]), 0, SCALE.length - 1);
           const d = p === pat[pat.length - 1] ? E * 1.6 : E * 0.9;
           if (p === 0 && rnd() < S.dbl) {
             notes.push({ t, lane: 0 }, { t, lane: 2 });
-            ev.push({ t, k: 'lead', n: SCALE[mi], d }, { t, k: 'lead', n: SCALE[Math.max(0, mi - 2)], d });
+            ev.push({ t, k: 'lead', n: SCALE[mi], d, w: SG.lead }, { t, k: 'lead', n: SCALE[Math.max(0, mi - 2)], d, w: SG.lead });
           } else {
             notes.push({ t, lane: mi < prev ? 0 : mi > prev ? 2 : 1 });
-            ev.push({ t, k: 'lead', n: SCALE[mi], d });
+            ev.push({ t, k: 'lead', n: SCALE[mi], d, w: SG.lead });
           }
         }
       }
     });
     ev.sort((a, b) => a.t - b.t);
     notes.sort((a, b) => a.t - b.t || a.lane - b.lane);
-    return (this.song = { ev, notes, B, end: bar * 4 * B });
+    return { ev, notes, B, end: bar * 4 * B };
   },
 
   // ---- 音效合成 ----
@@ -109,15 +128,15 @@ registerGame({
     };
     const g = ac.createGain();
     switch (e.k) {
-      case 'kick': { g.connect(out); env(g, 0.95, 0.3, 0.002); const o = osc('sine', 150, g); o.frequency.exponentialRampToValueAtTime(42, at + 0.13); o.start(at); o.stop(at + 0.32); break; }
-      case 'snare': { noise('highpass', 1300, 0.32, 0.17); g.connect(out); env(g, 0.22, 0.09); const o = osc('triangle', 190, g); o.start(at); o.stop(at + 0.1); break; }
+      case 'kick': { g.connect(out); env(g, 0.95 * (e.v || 1), 0.3, 0.002); const o = osc('sine', 150, g); o.frequency.exponentialRampToValueAtTime(42, at + 0.13); o.start(at); o.stop(at + 0.32); break; }
+      case 'snare': { const v = e.v || 1; noise('highpass', 1300, 0.32 * v, 0.17); g.connect(out); env(g, 0.22 * v, 0.09); const o = osc('triangle', 190, g); o.start(at); o.stop(at + 0.1); break; }
       case 'hat': noise('highpass', 7500, 0.07 * e.v, 0.045); break;
       case 'crash': noise('highpass', 4200, 0.16, 1.3); break;
       case 'bass': { const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 520; f.Q.value = 6; g.connect(f); f.connect(out); env(g, 0.26, e.d, 0.005); const o = osc('sawtooth', mtof(e.n), g); o.start(at); o.stop(at + e.d + 0.02); break; }
       case 'pad': { g.connect(out); env(g, e.soft ? 0.035 : 0.05, e.d, e.soft ? 0.08 : 0.004); const o = osc('triangle', mtof(e.n), g); o.start(at); o.stop(at + e.d + 0.02); break; }
       case 'lead': {
-        const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 2600; g.connect(f); f.connect(out); env(g, 0.075, e.d, 0.004);
-        const o1 = osc('square', mtof(e.n), g), o2 = osc('triangle', mtof(e.n + 12), g); o1.start(at); o2.start(at); o1.stop(at + e.d + 0.02); o2.stop(at + e.d + 0.02); break;
+        const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = e.w === 'sawtooth' ? 2000 : 2600; g.connect(f); f.connect(out); env(g, e.w === 'sine' ? 0.14 : e.w === 'triangle' ? 0.12 : 0.075, e.d, 0.004);
+        const o1 = osc(e.w || 'square', mtof(e.n), g), o2 = osc('triangle', mtof(e.n + 12), g); o1.start(at); o2.start(at); o1.stop(at + e.d + 0.02); o2.stop(at + e.d + 0.02); break;
       }
     }
   },
@@ -126,8 +145,9 @@ registerGame({
 
   start() {
     this.stopMusic();
-    const S = this.build();
-    this.notes = S.notes.map(n => ({ t: n.t, lane: n.lane, done: 0 }));
+    // 先選歌：記住上次選的歌和難度
+    this.mode = 'menu'; this.sel = clamp(Store.get('danceSong', 0), 0, this.SONGS.length - 1); this.diff = clamp(Store.get('danceDiff', 1), 0, 2); this.song = null; this.pausedAt = null;
+    this.notes = [];
     this.t = 0; this.cur = -1; this.started = false; this.evI = 0; this.nI = 0;
     this.score = 0; this.combo = 0; this.maxCombo = 0; this.acc = 0; this.judged = 0; this.counts = { PERFECT: 0, GREAT: 0, GOOD: 0, MISS: 0 };
     this.press = [0, 0, 0]; this.moves = [0, 0, 0]; this.missT = 0; this.over = false; this.overText = '';
@@ -138,14 +158,44 @@ registerGame({
     this.lat = this.ac ? Math.min(0.25, (this.ac.outputLatency || 0) + (this.ac.baseLatency || 0)) : 0;
     this.newMaster();
     const S = this.song;
-    if (!this.started) { this.started = true; this.t0 = this.clock() + 0.6; this.evI = 0; }
+    if (this.mode !== 'play') return;
+    if (this.pausedAt == null) { this.t0 = this.clock() + 0.6; this.evI = 0; }
     else {
       // 暫停後繼續：退回一點點，讓玩家有時間準備，音樂從暫停的地方接著放
       const at = this.pausedAt; this.t0 = this.clock() - at + 0.9;
       this.evI = S.ev.findIndex(e => e.t >= at); if (this.evI < 0) this.evI = S.ev.length;
     }
   },
-  onLeave() { this.pausedAt = this.songT(); this.stopMusic(); },
+  onLeave() { if (this.mode === 'play') this.pausedAt = this.songT(); this.stopMusic(); },
+  // 選好歌，開始！
+  choose() {
+    Store.set('danceSong', this.sel); Store.set('danceDiff', this.diff);
+    const D = this.DIFFS[this.diff];
+    this.song = this.build(this.sel, this.diff); this.TRAVEL = D.travel; this.win = D.win;
+    this.notes = this.song.notes.map(n => ({ t: n.t, lane: n.lane, done: 0 }));
+    this.mode = 'play'; this.started = true; this.pausedAt = null; this.evI = 0; this.nI = 0; this.lastBeat = -1; this.t = 0;
+    this.onEnter('menu');
+  },
+  bestKey() { return this.SONGS[this.sel].id + '-' + this.diff; },
+  // 選歌畫面的位置
+  menuLayout() {
+    const wide = V.W > V.H * 1.15, w = Math.min(V.W - 32, 470), x = wide ? V.W * 0.62 : V.W / 2, top = wide ? 74 : 112, rowH = wide ? 66 : 74;
+    const songs = this.SONGS.map((s, i) => ({ x, y: top + 54 + i * rowH + rowH / 2, w, h: rowH - 10 }));
+    const dy = top + 54 + this.SONGS.length * rowH + 30, dw = (w - 20) / 3;
+    const diffs = this.DIFFS.map((d, i) => ({ x: x - w / 2 + dw / 2 + i * (dw + 10), y: dy, w: dw, h: 52 }));
+    return { wide, x, w, top, songs, diffs, go: { x, y: dy + 84, w: Math.min(w, 300), h: 70 } };
+  },
+  menuTap(x, y) {
+    const M = this.menuLayout();
+    M.songs.forEach((r, i) => { if (Kid.hit(r, x, y, 2)) { this.sel = i; this.preview(); } });
+    M.diffs.forEach((r, i) => { if (Kid.hit(r, x, y, 2)) { this.diff = i; Sfx.play('click'); } });
+    if (Kid.hit(M.go, x, y, 4)) this.choose();
+  },
+  // 試聽：用這首歌的和弦彈一小段
+  preview() {
+    const SG = this.SONGS[this.sel], ch = this.CH[SG.prog[0]].map(n => n + SG.key + 12), sp = 30 / SG.bpm;
+    [0, 1, 2, 1, 0, 2].forEach((k, i) => setTimeout(() => Sfx.note(440 * Math.pow(2, (ch[k] - 69) / 12), 0.25, 0.12), i * sp * 1000));
+  },
   songT() { return this.clock() - this.t0; },
 
   layout() {
@@ -159,17 +209,26 @@ registerGame({
   },
   laneX(L, i) { return L.cx + (i - 1) * L.lw / 3; },
 
-  tap(x) {
+  tap(x, y) {
+    if (this.mode === 'menu') return this.menuTap(x, y);
     const L = this.layout();
     this.hit(clamp(Math.floor((x - (L.cx - L.lw / 2)) / (L.lw / 3)), 0, 2));
   },
   key(k) {
+    if (this.mode === 'menu') {
+      if (k === 'arrowup' || k === 'w') { this.sel = (this.sel + this.SONGS.length - 1) % this.SONGS.length; this.preview(); }
+      else if (k === 'arrowdown' || k === 's') { this.sel = (this.sel + 1) % this.SONGS.length; this.preview(); }
+      else if (k === 'arrowleft' || k === 'a') { this.diff = Math.max(0, this.diff - 1); Sfx.play('click'); }
+      else if (k === 'arrowright' || k === 'd') { this.diff = Math.min(2, this.diff + 1); Sfx.play('click'); }
+      else if (k === 'enter' || k === 'space') this.choose();
+      return;
+    }
     const m = { arrowleft: 0, a: 0, j: 0, arrowup: 1, arrowdown: 1, space: 1, w: 1, s: 1, k: 1, arrowright: 2, d: 2, l: 2 };
     if (k in m) this.hit(m[k]);
   },
 
   hit(lane) {
-    if (!this.started) return;
+    if (this.mode !== 'play') return;
     const now = this.cur; this.press[lane] = 1;
     let best = null, bd = 9;
     for (let i = this.nI; i < this.notes.length; i++) {
@@ -177,7 +236,7 @@ registerGame({
       if (n.done || n.lane !== lane) continue;
       const d = Math.abs(now - n.t); if (d < bd) { bd = d; best = n; }
     }
-    const G = this.GRADES.find(g => bd <= g.w);
+    const G = this.GRADES.find(g => bd <= g.w * this.win);
     if (!best || !G) { this.moves[lane] = 0.6; return; }   // 沒有音符也會跳，只是不算分
     best.done = 1; this.judged++; this.counts[G.s]++; this.acc += G.acc;
     this.combo++; this.maxCombo = Math.max(this.maxCombo, this.combo);
@@ -199,6 +258,7 @@ registerGame({
     this.t += dt;
     for (let i = 0; i < 3; i++) { this.press[i] = Math.max(0, this.press[i] - dt * 7); this.moves[i] = Math.max(0, this.moves[i] - dt * 2.6); }
     this.missT = Math.max(0, this.missT - dt); this.flash = Math.max(0, this.flash - dt * 4);
+    if (this.mode === 'menu') { if (Math.floor(this.t * 2) !== this.lastBeat) { this.lastBeat = Math.floor(this.t * 2); this.flash = 0.6; } return; }
     const S = this.song, st = this.songT();
     this.cur = st - this.lat;
     // 預先排好接下來 0.3 秒的聲音
@@ -209,7 +269,7 @@ registerGame({
     // 超過時間沒點到 = MISS
     while (this.nI < this.notes.length && this.notes[this.nI].done) this.nI++;
     for (let i = this.nI; i < this.notes.length; i++) {
-      const n = this.notes[i]; if (n.t > this.cur - 0.17) break;
+      const n = this.notes[i]; if (n.t > this.cur - 0.17 * this.win) break;
       if (!n.done) this.miss(n);
     }
     // 拍子：背景燈光跟著閃，連擊 30 以上進入 FEVER
@@ -219,14 +279,17 @@ registerGame({
     if (this.cur > S.end + 1.2) {
       const acc = this.notes.length ? this.acc / this.notes.length : 0;
       const rank = acc >= 0.95 ? 'S' : acc >= 0.85 ? 'A' : acc >= 0.7 ? 'B' : acc >= 0.5 ? 'C' : 'D';
-      this.overText = `評價 ${rank}！最多連擊 ${this.maxCombo}`;
+      const SG = this.SONGS[this.sel], D = this.DIFFS[this.diff];
+      this.overText = `${SG.icon} ${SG.name}（${D.name}）評價 ${rank}！最多連擊 ${this.maxCombo}`;
+      const bests = Store.get('danceBest', {}), k = this.bestKey(), old = bests[k];
+      if (!old || this.score > old.s) { bests[k] = { s: this.score, r: rank }; Store.set('danceBest', bests); }
       this.over = true; this.stopMusic();
     }
   },
 
   // ---- 紙片人的舞步 ----
   pose() {
-    const S = this.song, ph = Math.max(0, this.cur) / S.B * Math.PI, s = Math.sin(ph), bob = Math.abs(s);
+    const ph = this.song ? Math.max(0, this.cur) / this.song.B * Math.PI : this.t * Math.PI * 1.8, s = Math.sin(ph), bob = Math.abs(s);
     let p = { dy: -bob * 0.03, rot: 0.05 * s, head: -0.08 * s, aL: 0.55 + 0.25 * s, aLf: 1.3, aR: 0.55 - 0.25 * s, aRf: 1.3,
       lL: 0.12 + 0.12 * Math.max(0, s), lLf: -0.3 * Math.max(0, s), lR: 0.12 + 0.12 * Math.max(0, -s), lRf: -0.3 * Math.max(0, -s), sy: 1 - bob * 0.02 };
     const ease = v => 1 - Math.pow(1 - v, 3);
@@ -274,7 +337,28 @@ registerGame({
     c.closePath(); c.fill();
   },
 
+  drawMenu(c) {
+    const M = this.menuLayout(), bests = Store.get('danceBest', {});
+    const st = M.wide ? { px: V.W * 0.2, py: V.H * 0.9, ph: Math.min(V.H * 0.6, 420) } : { px: V.W / 2, py: V.H * 0.97, ph: Math.max(0, Math.min(300, V.H - (M.go.y + M.go.h / 2) - 70)) };
+    this.drawStage(c, st);
+    if (st.ph > 80) Puppet.draw(c, App.pup, st.px, st.py, st.ph, this.pose());
+    Kid.text(c, '🎵 選一首歌', M.x, M.top + 18, 34, '#ff4fa3', 8);
+    this.SONGS.forEach((sg, i) => {
+      const r = M.songs[i], on = i === this.sel, b = bests[sg.id + '-' + this.diff];
+      c.save(); c.translate(r.x, r.y); if (on) c.scale(1.03, 1.03);
+      Paper.rect(c, -r.w / 2, -r.h / 2, r.w, r.h, on ? '#fff1b8' : 'rgba(255,253,245,0.92)', 16, { border: on ? 5 : 3, edge: on ? '#ff4fa3' : undefined });
+      Kid.emoji(c, sg.icon, -r.w / 2 + 34, 2, r.h * 0.55);
+      c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillStyle = '#4a3520'; c.font = '900 22px "Noto Sans TC", system-ui, sans-serif'; c.fillText(sg.name, -r.w / 2 + 66, -9);
+      c.font = '700 14px "Noto Sans TC", system-ui, sans-serif'; c.fillStyle = '#8a7560'; c.fillText(`${sg.tag}・${sg.bpm} BPM`, -r.w / 2 + 66, 14);
+      c.textAlign = 'right'; c.font = '900 15px "Noto Sans TC", system-ui, sans-serif'; c.fillStyle = b ? '#e0573c' : '#b8a890';
+      c.fillText(b ? `${b.r}・${b.s}` : '還沒玩過', r.w / 2 - 14, 0);
+      c.restore();
+    });
+    this.DIFFS.forEach((d, i) => Kid.button(c, M.diffs[i], d.name, i === this.diff ? d.c : 'rgba(120,100,150,0.7)', { size: 24, pop: i === this.diff ? 0.15 : 0 }));
+    Kid.button(c, M.go, '▶ 開始！', '#ff4fa3', { size: 32, pop: Math.abs(Math.sin(this.t * 3)) * 0.12 });
+  },
   draw(c) {
+    if (this.mode === 'menu') return this.drawMenu(c);
     const L = this.layout(), S = this.song;
     this.drawStage(c, L);
     // 紙片人
@@ -339,5 +423,5 @@ registerGame({
     c.fillStyle = '#ff9fd0'; c.beginPath(); Paper.rrect(c, px + 2, py + 2, Math.max(0.01, (pw - 4) * pr), 8, 4); c.fill();
   },
 
-  hud() { return { L: `<b>${this.score}</b> 分`, R: this.combo >= 2 ? `<span class="combo">${this.combo} 連擊</span>` : this.fever > 0.5 ? 'FEVER!' : '' }; },
+  hud() { if (this.mode === 'menu') return { L: '🎵 選歌', R: '' }; return { L: `<b>${this.score}</b> 分`, R: this.combo >= 2 ? `<span class="combo">${this.combo} 連擊</span>` : this.fever > 0.5 ? 'FEVER!' : '' }; },
 });
