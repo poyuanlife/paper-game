@@ -3,7 +3,7 @@
 //  - 去背工具、字型（CDN）：存起來就一直用（檔案很大、不會變）
 // 新增檔案時記得加進 SHELL，並把 VERSION 加一。
 'use strict';
-const VERSION = 'paper-v7';
+const VERSION = 'paper-v8';
 const SHELL = [
   './', 'index.html', 'manifest.webmanifest', 'css/style.css',
   'js/store.js', 'js/cutout.js', 'js/puppet.js', 'js/pet.js', 'js/main.js', 'js/kidkit.js', 'js/tilt.js', 'js/maker.js',
@@ -12,6 +12,7 @@ const SHELL = [
   'js/games/balloon.js', 'js/games/count.js', 'js/games/piano.js', 'js/games/fishing.js', 'js/games/garden.js', 'js/games/dots.js', 'js/games/coloring.js', 'js/games/puzzle.js', 'js/games/feed.js', 'js/games/shapes.js',
   'js/games/drum.js', 'js/games/eggs.js', 'js/games/bath.js', 'js/games/crossing.js', 'js/games/size.js', 'js/games/animals.js', 'js/games/sort.js', 'js/games/paint.js', 'js/games/flashlight.js', 'js/games/inflate.js', 'js/games/basket.js', 'js/games/keepup.js', 'js/games/darts.js', 'js/games/bricks.js', 'js/games/snake.js', 'js/games/space.js', 'js/games/bowling.js', 'js/games/ski.js', 'js/games/baseball.js', 'js/games/mathrush.js',
   'js/games/marble.js', 'js/games/maze.js', 'js/games/tightrope.js', 'js/games/tiltcar.js', 'js/games/tiltcatch.js',
+  'js/games/tiltrun.js', 'js/games/tiltroam.js', 'js/games/tiltball.js', 'js/games/tiltmisc.js', 'js/games/shake.js', 'js/games/board.js', 'js/games/puzzles.js', 'js/games/kidquiz.js', 'js/games/nightmarket.js', 'js/games/timing.js', 'js/games/create.js',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png',
 ];
 const CDN = ['cdn.jsdelivr.net', 'storage.googleapis.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];
