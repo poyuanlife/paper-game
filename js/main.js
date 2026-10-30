@@ -174,6 +174,7 @@ const App = {
     this.state = state; this.stateT = 0;
     // 讓遊戲知道開始 / 離開遊玩（例如節奏遊戲要停音樂）
     if (g && prev === 'play' && state !== 'play' && g.onLeave) g.onLeave(state);
+    if (g && state === 'play' && prev !== 'play' && g.tilt) Tilt.reset();   // 重新校正：以現在拿手機的角度當作平的
     if (g && state === 'play' && prev !== 'play' && g.onEnter) g.onEnter(prev);
     const map = { home: 'scrHome', select: 'scrSelect', maker: 'scrMaker', cam: 'scrCam', ready: 'scrReady', pause: 'scrPause', result: 'scrResult', play: null };
     this.show(map[state]);
@@ -182,6 +183,7 @@ const App = {
   },
   startGame(g) {
     if (this.game && this.game.onLeave && this.state === 'play') this.game.onLeave('restart');
+    if (g.tilt) Tilt.request();   // iPhone 要在點擊時問陀螺儀權限
     this.game = g; FX.clear(); g.start();
     $('rdName').textContent = g.name; $('rdHow').textContent = g.howto; $('rdIcon').textContent = g.icon;
     const b = Store.best(g.id); $('rdBest').textContent = b ? `最高分：${b}` : '';
@@ -228,10 +230,10 @@ function renderGameList() {
   const box = $('gameList'); box.innerHTML = '';
   const tab = Store.get('gameTab', 'all');
   document.querySelectorAll('#gameTabs button').forEach(b => b.classList.toggle('on', b.dataset.t === tab));
-  GAMES.filter(g => tab === 'all' || (tab === 'kid') === !!g.kid).forEach((g, i) => {
+  GAMES.filter(g => tab === 'all' || (tab === 'tilt' ? g.tilt : (tab === 'kid') === !!g.kid)).forEach((g, i) => {
     const b = document.createElement('button'); b.className = 'gcard'; b.style.setProperty('--c', g.color); b.style.setProperty('--r', (i % 2 ? 1.2 : -1.2) + 'deg');
     const best = Store.best(g.id);
-    b.innerHTML = (g.kid ? `<span class="gKid">寶寶也會玩</span>` : "") + `<span class="gIcon">${g.icon}</span><span class="gName">${g.name}</span><span class="gDesc">${g.desc}</span><span class="gBest">${best ? '最高分 ' + best : '還沒玩過'}</span>`;
+    b.innerHTML = (g.tilt ? `<span class="gKid gTilt">📱 手機體感</span>` : g.kid ? `<span class="gKid">寶寶也會玩</span>` : "") + `<span class="gIcon">${g.icon}</span><span class="gName">${g.name}</span><span class="gDesc">${g.desc}</span><span class="gBest">${best ? '最高分 ' + best : '還沒玩過'}</span>`;
     b.onclick = () => { Sfx.play('click'); App.startGame(g); };
     box.appendChild(b);
   });
@@ -249,7 +251,7 @@ function frame(now) {
 }
 function step(dt) {
   const st = App.state, g = App.game;
-  if (st === 'play' && g) { g.update(dt); App.updateHud(); if (g.over) App.finish(); }
+  if (st === 'play' && g) { if (g.tilt) Tilt.update(dt); g.update(dt); App.updateHud(); if (g.over) App.finish(); }
   if (st === 'play' || st === 'result' || st === 'home' || st === 'select' || st === 'maker') FX.update(dt);
   V.shake = Math.max(0, V.shake - dt * 30);
 

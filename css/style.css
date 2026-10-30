@@ -129,3 +129,6 @@ button.corner { position: fixed; top: max(12px, env(safe-area-inset-top)); right
   box-shadow: 0 0 0 3px #fffdf5, 0 3px 6px rgba(60, 40, 10, 0.25); transform: rotate(6deg); white-space: nowrap; }
 #gameTabs { max-width: 440px; }
 #gameTabs button { font-size: 16px; white-space: nowrap; }
+.gKid.gTilt { background: #3f8fe0; color: #fff; }
+#gameTabs { max-width: 520px; }
+#gameTabs button { font-size: 15px; padding: 9px 4px; }
