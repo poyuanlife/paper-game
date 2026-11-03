@@ -136,3 +136,13 @@ button.corner { position: fixed; top: max(12px, env(safe-area-inset-top)); right
 button.corner.left { right: auto; left: 14px; width: auto; padding: 0 16px; border-radius: 24px; font-size: 16px; font-weight: 700; }
 .en .logo { font-size: clamp(40px, 9vw, 76px); letter-spacing: 0; }
 .en .logo small { letter-spacing: 3px; }
+
+/* 手機窄螢幕：不要讓內容把畫面撐寬（避免整個列表左右跑掉） */
+.scr { overflow-x: hidden; }
+.panel { max-width: 100%; box-sizing: border-box; min-width: 0; }
+#gameTabs { max-width: 100%; box-sizing: border-box; }
+.seg button { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 620px) { .seg button { font-size: clamp(12px, 3.6vw, 17px); padding: 9px 3px; } .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.cards > * { min-width: 0; overflow-wrap: anywhere; }
+.panel.wide { transform: none; }   /* 遊戲列表很長，傾斜一點點上下兩端就會歪很多 */
+#gameTabs button { white-space: normal; text-overflow: clip; line-height: 1.15; }
