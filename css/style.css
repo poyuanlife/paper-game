@@ -153,3 +153,6 @@ button.corner.left { right: auto; left: 14px; width: auto; padding: 0 16px; bord
 
 /* 隱私提示：讓玩家一眼就看到 */
 .privacy { margin: 14px 0 4px; padding: 10px 14px; border-radius: 12px; background: #e3f6e5; border: 2px solid #45ad4a; color: #2a7a33; font-size: 17px; font-weight: 900; line-height: 1.5; }
+
+button.corner.second { top: calc(max(12px, env(safe-area-inset-top)) + 58px); }
+button.corner.off { opacity: 0.45; text-decoration: line-through; }

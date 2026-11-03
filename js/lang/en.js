@@ -1941,3 +1941,4 @@ I18N.add({"猜數字 1A2B":"Code Breaker 1A2B",
 "機器人拿了 {0} 顆":"Robot took {0} stones",
 "你拿了 {0} 顆":"You took {0} stones",
 "太稀了 +{0}":"Too runny +{0}"});
+I18N.add({ "音樂": "Music" });

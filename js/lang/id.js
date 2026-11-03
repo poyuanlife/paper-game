@@ -1941,3 +1941,4 @@ I18N.add({"猜數字 1A2B":"Tebak Angka 1A2B",
 "機器人拿了 {0} 顆":"Robot mengambil {0} batu",
 "你拿了 {0} 顆":"Kamu mengambil {0} batu",
 "太稀了 +{0}":"Terlalu encer +{0}"});
+I18N.add({ "音樂": "Musik" });

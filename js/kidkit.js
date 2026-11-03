@@ -29,6 +29,7 @@ const Kid = (() => {
   if (window.speechSynthesis) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
   function say(s) {
     if (!Sfx.on || !window.speechSynthesis) return;
+    if (typeof Bgm !== 'undefined') Bgm.duck(Math.min(5, 1 + String(s).length * 0.12));   // 念題目時背景音樂變小聲
     try {
       speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(I18N.tr(s)); u.lang = I18N.speechLang(); u.rate = 1; u.pitch = 1.25;
