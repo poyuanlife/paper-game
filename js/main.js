@@ -35,7 +35,12 @@ addEventListener('keydown', e => {
   Input.keys[k] = true; Sfx.unlock(); App.key(k);
 });
 addEventListener('keyup', e => { Input.keys[e.key === ' ' ? 'space' : e.key.toLowerCase()] = false; });
-addEventListener('blur', () => { Input.keys = {}; Input.down = false; if (App.state === 'play') App.pause(); });
+// 視窗失去焦點：電腦上自動暫停；手機上不暫停（有些 App 內建瀏覽器連點時會誤判失去焦點），切到別的 App 時由 visibilitychange 處理
+const touchDev = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
+addEventListener('blur', () => { Input.keys = {}; Input.down = false; if (App.state === 'play' && !touchDev) App.pause(); });
+let lastCanvasTap = 0;
+cv.addEventListener('pointerdown', () => { lastCanvasTap = performance.now(); }, true);
+cv.addEventListener('dblclick', e => e.preventDefault());
 document.addEventListener('visibilitychange', () => { if (document.hidden && App.state === 'play') App.pause(); });
 const keyDir = () => (Input.keys.arrowright || Input.keys.d ? 1 : 0) - (Input.keys.arrowleft || Input.keys.a ? 1 : 0);
 
@@ -283,7 +288,7 @@ function step(dt) {
 document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => { Sfx.play('click'); App.go(b.dataset.go); }));
 $('bPlay').onclick = () => { Sfx.play('click'); App.go('select'); };
 $('bMake').onclick = () => { Sfx.play('click'); Maker.open(); };
-$('bPause').onclick = () => { Sfx.play('click'); App.pause(); };
+$('bPause').onclick = () => { if (performance.now() - lastCanvasTap < 350) return; Sfx.play('click'); App.pause(); };   // 連點遊戲畫面時不小心點到暫停鈕就不算
 $('psResume').onclick = () => { Sfx.play('click'); App.resume(); };
 $('psRestart').onclick = () => { Sfx.play('click'); App.startGame(App.game); };
 $('psQuit').onclick = () => { Sfx.play('click'); App.go('select'); };
