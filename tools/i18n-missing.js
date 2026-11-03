@@ -1,5 +1,5 @@
-// 列出遊戲裡還沒有英文翻譯的中文句子：node tools/i18n-missing.js
-// （新增遊戲後跑一次，把列出來的句子翻好加進 js/lang/en.js）
+// 列出遊戲裡還沒有翻譯的中文句子（每一種語言都檢查）：node tools/i18n-missing.js
+// （新增遊戲後跑一次，把列出來的句子翻好加進 js/lang/ 裡對應的語言檔）
 const ROOT = process.argv[2] || require('path').join(__dirname, '..');
 const fs = require('fs'), path = require('path');
 const HAN = /[㐀-鿿]/;
@@ -46,7 +46,13 @@ for (const f of files) {
   if (f.endsWith('.html')) html(s, f); else if (f.endsWith('.webmanifest')) { for (const m of s.matchAll(/"([^"]*[㐀-鿿][^"]*)"/g)) add(m[1], f); } else lex(s, f);
 }
 const arr = [...found].map(([s, f]) => ({ s, f }));
-global.I18N = { add(d) { global.DICT = d; } };
-require(path.join(ROOT, 'js/lang/en.js'));
-const miss = arr.filter(x => !(x.s in DICT) && !['紙', '片', '人', '🌐 中文'].includes(x.s));
-console.log(miss.length ? miss.map(x => x.f + '\t' + x.s).join('\n') : '全部都有英文翻譯 ✔');
+const IGN = ['紙', '片', '人', '🌐 中文', '中文', '日本語'];   // 語言名稱本身不用翻
+let all = true;
+for (const f of fs.readdirSync(path.join(ROOT, 'js/lang'))) {
+  let D = {}; global.I18N = { add(d) { Object.assign(D, d); } };
+  delete require.cache[require.resolve(path.join(ROOT, 'js/lang', f))]; require(path.join(ROOT, 'js/lang', f));
+  // 前面是 emoji + 空白的句子（例如「🔒 照片…」），後半段有翻譯就算有
+  const miss = arr.filter(x => !(x.s in D) && !IGN.includes(x.s) && !(/^\S+ /.test(x.s) && x.s.replace(/^\S+ /, '') in D));
+  if (miss.length) { all = false; console.log('== ' + f + '：' + miss.length + ' 句沒有翻譯'); console.log(miss.map(x => x.f + '  ' + x.s).join('\n')); }
+}
+if (all) console.log('所有語言都有翻譯 ✔');

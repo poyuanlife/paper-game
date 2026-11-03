@@ -1676,3 +1676,4 @@ I18N.add({"紙片人遊樂園":"Paper Pals Playground",
 "{0} 挖到了！":"{0} found!",
 "失敗了：{0}":"Something went wrong: {0}",
 "打不開相機：{0}":"Can't open the camera: {0}"});
+I18N.add({ "@logo": "<span>Paper</span><span>Pals</span><small>Playground</small>" });

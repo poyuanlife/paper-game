@@ -23,7 +23,8 @@ const Kid = (() => {
   let voice = null;
   function pickVoice() {
     const vs = window.speechSynthesis ? speechSynthesis.getVoices() : [];
-    voice = I18N.lang === 'en' ? (vs.find(v => /en[-_]US/i.test(v.lang)) || vs.find(v => /^en/i.test(v.lang)) || null) : (vs.find(v => /zh[-_]TW/i.test(v.lang)) || vs.find(v => /zh[-_](HK|Hant)/i.test(v.lang)) || vs.find(v => /^zh/i.test(v.lang)) || null);
+    const code = I18N.speechLang(), pre = code.slice(0, 2), norm = l => String(l).replace('_', '-').toLowerCase();
+    voice = vs.find(v => norm(v.lang) === code.toLowerCase()) || (pre === 'zh' && vs.find(v => /zh[-_](HK|Hant)/i.test(v.lang))) || vs.find(v => norm(v.lang).startsWith(pre)) || null;
   }
   if (window.speechSynthesis) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
   function say(s) {

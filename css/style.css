@@ -134,8 +134,12 @@ button.corner { position: fixed; top: max(12px, env(safe-area-inset-top)); right
 #gameTabs button { font-size: 15px; padding: 9px 4px; }
 
 button.corner.left { right: auto; left: 14px; width: auto; padding: 0 16px; border-radius: 24px; font-size: 16px; font-weight: 700; }
-.en .logo { font-size: clamp(40px, 9vw, 76px); letter-spacing: 0; }
-.en .logo small { letter-spacing: 3px; }
+.tr .logo { font-size: clamp(36px, 9vw, 76px); letter-spacing: 0; }
+.tr .logo small { letter-spacing: 3px; }
+.ja body, .ja button, .ja input { font-family: "Noto Sans JP", "Noto Sans TC", system-ui, sans-serif; }
+.langMenu { position: fixed; z-index: 50; top: calc(max(12px, env(safe-area-inset-top)) + 56px); left: 14px; display: flex; flex-direction: column; gap: 6px; padding: 8px; background: #fffdf5; border-radius: 16px; box-shadow: 0 6px 0 #e0d2b5, 0 12px 24px rgba(70,45,10,0.25); }
+.langMenu button { padding: 10px 18px; border-radius: 12px; font-size: 17px; font-weight: 700; text-align: left; background: #f2e6cc; }
+.langMenu button.on { background: #e0573c; color: #fff; }
 
 /* 手機窄螢幕：不要讓內容把畫面撐寬（避免整個列表左右跑掉） */
 .scr { overflow-x: hidden; }
@@ -146,3 +150,6 @@ button.corner.left { right: auto; left: 14px; width: auto; padding: 0 16px; bord
 .cards > * { min-width: 0; overflow-wrap: anywhere; }
 .panel.wide { transform: none; }   /* 遊戲列表很長，傾斜一點點上下兩端就會歪很多 */
 #gameTabs button { white-space: normal; text-overflow: clip; line-height: 1.15; }
+
+/* 隱私提示：讓玩家一眼就看到 */
+.privacy { margin: 14px 0 4px; padding: 10px 14px; border-radius: 12px; background: #e3f6e5; border: 2px solid #45ad4a; color: #2a7a33; font-size: 17px; font-weight: 900; line-height: 1.5; }

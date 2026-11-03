@@ -16,7 +16,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&display=swap">
 <link rel="stylesheet" href="css/style.css">
 <script src="js/i18n.js"></script>
-<script>if (I18N.lang === "en") document.write('<script src="js/lang/en.js"><\/script>');</script>
+<script>if (I18N.lang !== "zh") document.write('<script src="js/lang/' + I18N.lang + '.js"><\/script>');</script>
 </head>
 <body>
 <canvas id="cv"></canvas>
@@ -105,7 +105,7 @@
       </div>
     </div>
     <p id="mkErr" class="err"></p>
-    <p class="dim small">照片只在你的裝置上處理，不會上傳。</p>
+    <p class="privacy">🔒 照片只在你的裝置上處理，不會上傳。</p>
     <button class="back" data-go="home">← 返回</button>
   </div>
 </section>
