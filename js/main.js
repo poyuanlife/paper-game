@@ -212,7 +212,7 @@ const App = {
   },
   updateHud() {
     const g = this.game; if (!g || !g.hud) return;
-    const h = g.hud(); $('hudL').innerHTML = h.L || ''; $('hudR').innerHTML = h.R || '';
+    const h = g.hud(); $('hudL').innerHTML = tr(h.L || ''); $('hudR').innerHTML = tr(h.R || '');
   },
   async setPuppet(src) { this.pup = Puppet.build(src.canvas, src.J); },
   // 角色：'me' 人、'pet' 寵物、'default' 預設紙娃娃

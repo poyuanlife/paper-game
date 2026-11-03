@@ -132,3 +132,7 @@ button.corner { position: fixed; top: max(12px, env(safe-area-inset-top)); right
 .gKid.gTilt { background: #3f8fe0; color: #fff; }
 #gameTabs { max-width: 520px; }
 #gameTabs button { font-size: 15px; padding: 9px 4px; }
+
+button.corner.left { right: auto; left: 14px; width: auto; padding: 0 16px; border-radius: 24px; font-size: 16px; font-weight: 700; }
+.en .logo { font-size: clamp(40px, 9vw, 76px); letter-spacing: 0; }
+.en .logo small { letter-spacing: 3px; }

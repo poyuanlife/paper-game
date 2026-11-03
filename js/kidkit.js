@@ -14,6 +14,7 @@ const Kid = (() => {
   // 有白色紙邊的字
   function text(c, s, x, y, size, color = '#4a3520', edge = 8) {
     c.save(); c.font = `900 ${Math.round(size)}px ${TXT}`; c.textAlign = 'center'; c.textBaseline = 'middle';
+    if (I18N.lang !== 'zh') { const w = c.measureText(s).width, mx = V.W - 24; if (w > mx) c.font = `900 ${Math.round(size * mx / w)}px ${TXT}`; }
     if (edge) { c.lineJoin = 'round'; c.lineWidth = edge; c.strokeStyle = Paper.PAPER; c.strokeText(s, x, y); }
     c.fillStyle = color; c.fillText(s, x, y); c.restore();
   }
@@ -22,14 +23,14 @@ const Kid = (() => {
   let voice = null;
   function pickVoice() {
     const vs = window.speechSynthesis ? speechSynthesis.getVoices() : [];
-    voice = vs.find(v => /zh[-_]TW/i.test(v.lang)) || vs.find(v => /zh[-_](HK|Hant)/i.test(v.lang)) || vs.find(v => /^zh/i.test(v.lang)) || null;
+    voice = I18N.lang === 'en' ? (vs.find(v => /en[-_]US/i.test(v.lang)) || vs.find(v => /^en/i.test(v.lang)) || null) : (vs.find(v => /zh[-_]TW/i.test(v.lang)) || vs.find(v => /zh[-_](HK|Hant)/i.test(v.lang)) || vs.find(v => /^zh/i.test(v.lang)) || null);
   }
   if (window.speechSynthesis) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
   function say(s) {
     if (!Sfx.on || !window.speechSynthesis) return;
     try {
       speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(s); u.lang = 'zh-TW'; u.rate = 1; u.pitch = 1.25;
+      const u = new SpeechSynthesisUtterance(I18N.tr(s)); u.lang = I18N.speechLang(); u.rate = 1; u.pitch = 1.25;
       if (voice) u.voice = voice;
       speechSynthesis.speak(u);
     } catch (e) {}

@@ -15,6 +15,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&display=swap">
 <link rel="stylesheet" href="css/style.css">
+<script src="js/i18n.js"></script>
+<script>if (I18N.lang === "en") document.write('<script src="js/lang/en.js"><\/script>');</script>
 </head>
 <body>
 <canvas id="cv"></canvas>
@@ -33,6 +35,7 @@
     <p id="installTip" class="installTip hidden"></p>
   </div>
   <button id="bSound" class="corner">🔊</button>
+  <button id="bLang" class="corner left"></button>
 </section>
 
 <!-- 選遊戲 -->
