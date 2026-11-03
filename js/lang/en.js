@@ -1942,3 +1942,4 @@ I18N.add({"猜數字 1A2B":"Code Breaker 1A2B",
 "你拿了 {0} 顆":"You took {0} stones",
 "太稀了 +{0}":"Too runny +{0}"});
 I18N.add({ "音樂": "Music" });
+I18N.add({"🔁 輪播全部":"🔁 Shuffle All","🎠 歡樂樂園":"🎠 Happy Park","🏖️ 海邊假期":"🏖️ Beach Holiday","🌙 星空華爾滋":"🌙 Starry Waltz","⚔️ 勇敢冒險":"⚔️ Brave Adventure","🍬 糖果跳跳":"🍬 Candy Hop","🔇 關閉音樂":"🔇 Music Off"});

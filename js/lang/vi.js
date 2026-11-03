@@ -1942,3 +1942,4 @@ I18N.add({"猜數字 1A2B":"Đoán số 1A2B",
 "你拿了 {0} 顆":"Bạn bốc {0} viên",
 "太稀了 +{0}":"Loãng quá +{0}"});
 I18N.add({ "音樂": "Nhạc" });
+I18N.add({"🔁 輪播全部":"🔁 Phát lần lượt","🎠 歡樂樂園":"🎠 Công viên vui vẻ","🏖️ 海邊假期":"🏖️ Kỳ nghỉ biển","🌙 星空華爾滋":"🌙 Điệu valse sao trời","⚔️ 勇敢冒險":"⚔️ Phiêu lưu dũng cảm","🍬 糖果跳跳":"🍬 Kẹo nhảy tưng tưng","🔇 關閉音樂":"🔇 Tắt nhạc"});

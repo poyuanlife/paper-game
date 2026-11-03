@@ -156,3 +156,5 @@ button.corner.left { right: auto; left: 14px; width: auto; padding: 0 16px; bord
 
 button.corner.second { top: calc(max(12px, env(safe-area-inset-top)) + 58px); }
 button.corner.off { opacity: 0.45; text-decoration: line-through; }
+
+.musicMenu { left: auto; right: 14px; top: calc(max(12px, env(safe-area-inset-top)) + 116px); }

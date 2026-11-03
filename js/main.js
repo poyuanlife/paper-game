@@ -298,7 +298,7 @@ $('rsBack').onclick = () => { Sfx.play('click'); App.go('select'); };
 $('scrReady').addEventListener('pointerdown', e => { if (e.target.closest('button')) return; e.preventDefault(); Sfx.unlock(); App.tap(e.clientX / V.k, e.clientY / V.k); });
 const syncSound = () => { $('bSound').textContent = Sfx.on ? '🔊' : '🔈'; $('bMusic').classList.toggle('off', !(Bgm.on && Sfx.on)); };
 $('bSound').onclick = () => { Sfx.toggle(); syncSound(); Sfx.play('click'); Bgm.update(); };
-$('bMusic').onclick = () => { if (!Sfx.on) { Sfx.toggle(); if (!Bgm.on) Bgm.toggle(); else Bgm.update(); } else Bgm.toggle(); syncSound(); Sfx.play('click'); };
+$('bMusic').onclick = () => { Sfx.play('click'); Bgm.menu(syncSound); };   // 選歌 / 輪播 / 關掉
 
 // ---- 分享：把紙片人 + 分數做成一張圖 ----
 async function shareResult() {

@@ -1942,3 +1942,4 @@ I18N.add({"猜數字 1A2B":"Tebak Angka 1A2B",
 "你拿了 {0} 顆":"Kamu mengambil {0} batu",
 "太稀了 +{0}":"Terlalu encer +{0}"});
 I18N.add({ "音樂": "Musik" });
+I18N.add({"🔁 輪播全部":"🔁 Putar Bergantian","🎠 歡樂樂園":"🎠 Taman Ceria","🏖️ 海邊假期":"🏖️ Liburan Pantai","🌙 星空華爾滋":"🌙 Waltz Bintang","⚔️ 勇敢冒險":"⚔️ Petualangan Berani","🍬 糖果跳跳":"🍬 Permen Melompat","🔇 關閉音樂":"🔇 Matikan Musik"});
