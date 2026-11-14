@@ -9,7 +9,7 @@ const TiltUI = {
   },
   // 右下角的傾斜指示器
   dial(c, x = V.W - 56, y = V.H - 70) { Paper.circle(c, x, y, 30, 'rgba(255,253,245,0.85)', { border: 3, blur: 4 }); Paper.circle(c, x + Tilt.x * 21, y + Tilt.y * 21, 9, '#3f8fe0', { border: 2, blur: 2 }); },
-  lives(n, max = 3) { return '❤️'.repeat(Math.max(0, n)) + '🤍'.repeat(Math.max(0, max - n)); },
+  lives(n, max = 3) { return '❤️'.repeat(Math.max(0, n)) + '🖤'.repeat(Math.max(0, max - n)); },
   // 常用的畫法
   rock(c, x, y, r, col = '#8a8a96') { Paper.shape(c, cc => { for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2, rr = r * (0.82 + 0.22 * Math.sin(i * 2.7 + r)); cc.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr * 0.8); } cc.closePath(); }, col, { border: 3, blur: 5 }); },
   ring(c, x, y, r, col = '#ffd23f') { c.save(); c.strokeStyle = '#fffdf5'; c.lineWidth = 12; c.beginPath(); c.ellipse(x, y, r, r * 0.82, 0, 0, Math.PI * 2); c.stroke(); c.strokeStyle = col; c.lineWidth = 7; c.stroke(); c.restore(); },
@@ -96,7 +96,7 @@ const BG = {
 
 // ---- 7 款 ----
 TiltRun({
-  id: 'skydive', name: '跳傘大冒險', icon: '🪂', color: '#3f8fe0', dir: 'up', lives: 3, speed: 240,
+  id: 'skydive', name: '跳傘大冒險', icon: '🦅', color: '#3f8fe0', dir: 'up', lives: 3, speed: 240,
   desc: '從高空往下跳，傾斜手機穿過圈圈！（手機限定）',
   howto: '📱 手機限定：紙片人從飛機上跳下來了！左右傾斜手機移動，穿過 ⭕ 金色圈圈得 25 分、吃 ⭐ 得 10 分，閃開小鳥。撞到 3 次就結束，限時 45 秒。（電腦用 ← → 鍵）',
   end: '安全降落！', lose: '被小鳥撞暈了！', ouch: '啾啾！',
@@ -126,7 +126,7 @@ TiltRun({
 });
 
 TiltRun({
-  id: 'hotair', name: '熱氣球旅行', icon: '🎈', color: '#e9654b', dir: 'down', lives: 3, speed: 200, pr: 50,
+  id: 'hotair', name: '熱氣球旅行', icon: '🌄', color: '#e9654b', dir: 'down', lives: 3, speed: 200, pr: 50,
   desc: '坐熱氣球在天空飛，閃開閃電和小鳥！（手機限定）',
   howto: '📱 手機限定：左右傾斜手機讓熱氣球移動，收集 ⭐ 和 🎈，小心 ⚡ 雷雨雲和小鳥！撞到 3 次就要降落了，限時 45 秒。（電腦用 ← → 鍵）',
   end: '環遊天空成功！', lose: '熱氣球降落了！',
@@ -143,7 +143,7 @@ TiltRun({
 });
 
 TiltRun({
-  id: 'sled', name: '企鵝雪橇', icon: '🐧', color: '#5aa9e6', dir: 'down', speed: 240, kid: true,
+  id: 'sled', name: '企鵝雪橇', icon: '🛷', color: '#5aa9e6', dir: 'down', speed: 240, kid: true,
   desc: '坐雪橇滑下雪坡，吃小魚！撞到不會輸～（手機限定）',
   howto: '📱 手機限定：把手機往左右歪，雪橇就會轉彎！收集 🐟 小魚和 ⭐ 星星，撞到樹或雪人會慢下來，但是不會輸喔。限時 45 秒。（電腦用 ← → 鍵）',
   end: '滑得好開心！', ouch: '哎唷～',
@@ -173,7 +173,7 @@ TiltRun({
 });
 
 TiltRun({
-  id: 'submarine', name: '小小潛水艇', icon: '🐠', color: '#1d6fa8', dir: 'left', lives: 3, speed: 240, pr: 34,
+  id: 'submarine', name: '小小潛水艇', icon: '⚓', color: '#1d6fa8', dir: 'left', lives: 3, speed: 240, pr: 34,
   desc: '開潛水艇探索海底，閃開鯊魚！（手機限定）',
   howto: '📱 手機限定：手機往前傾，潛水艇往上；往後傾，潛水艇往下。收集 🐚 貝殼、🐠 小魚、💎 寶石，閃開 🦈 鯊魚和 🐡 河豚。撞到 3 次就結束，限時 45 秒。（電腦用 ↑ ↓ 鍵）',
   end: '海底探險完成！', lose: '潛水艇被撞壞了！', hintCol: '#ffffff',

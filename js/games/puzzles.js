@@ -5,7 +5,7 @@
 
 // ---- 數字拼盤 ----
 registerGame({
-  id: 'slide', name: '數字拼盤', icon: '🧮', color: '#5b6fd6',
+  id: 'slide', name: '數字拼盤', icon: '🔀', color: '#5b6fd6',
   desc: '滑動方塊，把數字照順序排好！',
   howto: '點空格旁邊的方塊，它就會滑到空格裡。把數字從 1 開始照順序排好（空格在最後）就過關！第一關 3×3，第二關 4×4。',
   start() { this.t = 0; this.score = 0; this.over = false; this.overText = '排序大師！'; this.lv = 0; this.newLevel(); },

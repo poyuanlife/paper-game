@@ -1,7 +1,7 @@
 'use strict';
 // 太空閃避：紙片人坐著火箭，手指拖著移動，躲開隕石、吃星星。盾牌可以擋一次。3 條命，撐越久分數越高。
 registerGame({
-  id: 'space', name: '太空大冒險', icon: '🚀', color: '#3b3f8c',
+  id: 'space', name: '太空大冒險', icon: '🌌', color: '#3b3f8c',
   desc: '開著火箭躲隕石、收集星星！',
   howto: '手指按住畫面拖動火箭（或用方向鍵），躲開掉下來的隕石，吃 ⭐ 星星加分，🛡️ 盾牌可以擋一次撞擊。3 條命，越後面隕石越多！',
 
@@ -59,5 +59,5 @@ registerGame({
     if (this.shield) { c.strokeStyle = `rgba(127,216,255,${0.6 + Math.sin(this.t * 8) * 0.3})`; c.lineWidth = 4; c.beginPath(); c.arc(x, y - 10, 70, 0, Math.PI * 2); c.stroke(); }
     if (this.t < 3 && !Input.down) Kid.text(c, '👆 按住拖動火箭', V.W / 2, V.H * 0.5, 30, '#fff6c8');
   },
-  hud() { return { L: `<b>${Math.floor(this.score)}</b> 分`, R: '❤️'.repeat(Math.max(0, this.lives)) + '🤍'.repeat(Math.max(0, 3 - this.lives)) }; },
+  hud() { return { L: `<b>${Math.floor(this.score)}</b> 分`, R: '❤️'.repeat(Math.max(0, this.lives)) + '🖤'.repeat(Math.max(0, 3 - this.lives)) }; },
 });

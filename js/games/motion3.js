@@ -13,7 +13,7 @@ const circHint = () => Tilt.active ? '📱 拿著手機一直「畫圓圈」（�
 
 // ---- 呼拉圈 ----
 registerGame({
-  id: 'hulahoop', name: '呼拉圈', icon: '⭕', color: '#e86fae', tilt: true,
+  id: 'hulahoop', name: '呼拉圈', icon: '🌀', color: '#e86fae', tilt: true,
   desc: '拿著手機畫圓圈，讓紙片人的呼拉圈一直轉不要掉！（手機限定）',
   howto: '📱 手機限定：拿著手機一直「畫圓圈」（像搖呼拉圈那樣轉著歪），紙片人的呼拉圈就會轉！轉越快越穩，太慢呼拉圈會往下掉。掉 3 次就結束，轉越多圈分數越高，限時 45 秒。（電腦：滑鼠按住繞著中間畫圈）',
   TIME: 45,
@@ -134,7 +134,7 @@ ShakeGame({
 
 // ---- 搖搖節奏 ----
 ShakeGame({
-  id: 'shakerhythm', name: '搖搖節奏', icon: '🥁', color: '#ff7a3d',
+  id: 'shakerhythm', name: '搖搖節奏', icon: '🎼', color: '#ff7a3d',
   desc: '音符掉到圈圈的時候搖一下手機，跟著音樂打節拍！（手機限定）',
   howto: '📱 手機限定：音符會從上面掉下來，掉到下面的圈圈時「搖一下」手機！剛好對到拍子是 PERFECT，太早太晚就 MISS。一共 40 個音符，連續對到有加分！（電腦：點畫面或按空白鍵）',
   start() {

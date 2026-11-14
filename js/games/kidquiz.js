@@ -59,7 +59,7 @@ KidQuiz({
 });
 
 KidQuiz({
-  id: 'oddone', name: '哪個不一樣', icon: '🔍', color: '#2fa58c',
+  id: 'oddone', name: '哪個不一樣', icon: '❓', color: '#2fa58c',
   desc: '四個東西裡面，哪一個跟別人不一樣？',
   howto: '下面有四個東西，有三個是同一類的（例如都是水果），找出那個「不一樣」的！一共 10 題。',
   make(g) { const [A, B] = Kid.shuffle(QZ.groups.slice()).slice(0, 2), same = Kid.shuffle(A[1].slice()).slice(0, 3), odd = pick(B[1]), opts = Kid.shuffle(same.concat([odd])); return { opts, ans: opts.indexOf(odd), text: '哪一個不一樣？', say: '哪一個不一樣？', right: `答對了！其他都是${A[0]}`, wrong: () => `這個也是${A[0]}喔` }; },

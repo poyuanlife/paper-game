@@ -69,5 +69,5 @@ registerGame({
     if (this.t < 5 || (!Tilt.active && this.t < 12)) Kid.text(c, Tilt.hint(), V.W / 2, V.H - 40, 18, '#2a2a33', 6);
     if (this.fall) Kid.text(c, '哇啊啊～', V.W / 2, V.H * 0.32, 44, '#ffd23f');
   },
-  hud() { return { L: `<b>${this.score}</b> 公尺`, R: '❤️'.repeat(Math.max(0, this.lives)) + '🤍'.repeat(Math.max(0, 3 - this.lives)) }; },
+  hud() { return { L: `<b>${this.score}</b> 公尺`, R: '❤️'.repeat(Math.max(0, this.lives)) + '🖤'.repeat(Math.max(0, 3 - this.lives)) }; },
 });

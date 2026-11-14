@@ -9,7 +9,7 @@ const NightBG = (c, t, top = '#2b1f52', bot = '#5b2f7a') => {
 
 // ---- 撈金魚 ----
 registerGame({
-  id: 'goldfish', name: '夜市撈金魚', icon: '🐠', color: '#e9654b',
+  id: 'goldfish', name: '夜市撈金魚', icon: '🐡', color: '#e9654b',
   desc: '用紙網撈金魚，小心紙網會破掉！',
   howto: '手指按住畫面，紙網就會放進水裡；移到金魚下面再「放開」就能把魚撈起來！紙網泡在水裡、動太快都會變爛，破掉就換下一支。一共 3 支紙網，金色的魚分數最多。',
   start() { this.t = 0; this.score = 0; this.over = false; this.overText = '撈到好多魚！'; this.poi = 3; this.hp = 1; this.fish = []; this.bowl = []; this.wasDown = false; this.px = V.W / 2; this.py = V.H / 2; this.brk = 0; for (let i = 0; i < 9; i++) this.addFish(); },

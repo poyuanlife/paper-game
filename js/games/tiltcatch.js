@@ -1,7 +1,7 @@
 'use strict';
 // 斜斜接星星：手機往左右傾斜，紙片人就跑過去接住掉下來的星星和水果。沒有炸彈、不會輸，給小小孩玩。40 秒。
 registerGame({
-  id: 'tiltcatch', name: '斜斜接星星', icon: '🌟', color: '#f2b33d', tilt: true, kid: true,
+  id: 'tiltcatch', name: '斜斜接星星', icon: '⭐', color: '#f2b33d', tilt: true, kid: true,
   desc: '歪歪手機，紙片人就會跑去接星星！（手機限定）',
   howto: '📱 手機限定：把手機往左邊或右邊歪，紙片人就會跑過去，接住掉下來的星星和水果！彩虹星星分數最多。不會輸，限時 40 秒。（也可以用手指按住畫面左邊 / 右邊）',
   TIME: 40,

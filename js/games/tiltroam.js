@@ -212,7 +212,7 @@ TiltRoam({
   desc: '撿起海裡的垃圾，保護海龜！（手機限定）',
   howto: '📱 手機限定：歪歪手機潛水，撿起海裡的垃圾（瓶子、袋子、鞋子）。小心不要撞到海龜和魚，牠們會被嚇到喔！不會輸，限時 45 秒。（電腦用方向鍵）',
   end: '海洋變乾淨了！', hintCol: '#ffffff',
-  thing: () => ({ e: pick(['🥤', '🛍️', '👟', '🥫', '🧃']), r: 22, move: 'wander', speed: 20 }),
+  thing: () => ({ e: pick(['🥤', '🛍️', '👟', '🥫', '📰']), r: 22, move: 'wander', speed: 20 }),
   foes: () => 3, foe: () => ({ e: pick(['🐢', '🐠', '🐙']), r: 28, speed: 70, flip: 1 }),
   touch(g, o) { g.collect(o, 10, 'pop'); if (g.got % 10 === 0) { Kid.say('海洋變乾淨了！'); FX.text(V.W / 2, V.H * 0.3, '謝謝你！', '#2fa58c', 40); } },
   hit(g, f) { g.hurt = 1; g.score = Math.max(0, g.score - 5); Sfx.play('boing'); FX.text(f.x, f.y - 40, '小心海龜！', '#7a62b8', 26); const d = Math.hypot(g.p.x - f.x, g.p.y - f.y) || 1; g.p.vx += (g.p.x - f.x) / d * 400; g.p.vy += (g.p.y - f.y) / d * 400; },

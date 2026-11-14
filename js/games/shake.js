@@ -45,7 +45,7 @@ ShakeGame({
 
 // ---- 汽水火箭 ----
 ShakeGame({
-  id: 'sodarocket', name: '汽水火箭', icon: '🚀', color: '#e8453c',
+  id: 'sodarocket', name: '汽水火箭', icon: '🎇', color: '#e8453c',
   desc: '搖汽水累積氣壓，按發射衝上天！（手機限定）',
   howto: '📱 手機限定：先用力搖手機讓汽水瓶的氣壓變高（氣壓會慢慢漏掉，要一直搖），覺得夠了就按「發射！」，紙片人會坐著汽水瓶衝上天！搖太久瓶子會爆掉喔。一共 3 次。（電腦：狂點畫面搖、按 Enter 或點按鈕發射）',
   start() { this.t = 0; this.score = 0; this.over = false; this.overText = '太空人！'; this.tries = 0; this.ls = null; this.reset(); this.best = 0; },
@@ -203,7 +203,7 @@ ShakeGame({
 
 // ---- 雪花水晶球 ----
 ShakeGame({
-  id: 'snowglobe', name: '雪花水晶球', icon: '🔮', color: '#7fb3e0', kid: true,
+  id: 'snowglobe', name: '雪花水晶球', icon: '❄️', color: '#7fb3e0', kid: true,
   desc: '搖一搖水晶球，裡面會下雪、下星星！（手機限定）',
   howto: '📱 手機限定：紙片人住在水晶球裡！搖一搖手機，裡面就會下雪。搖越多次，會變成下星星、下愛心、下花瓣…看看還有什麼！不會輸，限時 30 秒。（電腦：狂點畫面或按空白鍵）',
   TIME: 30, KINDS: [['❄️', '#ffffff', '下雪了！'], ['⭐', '#ffd23f', '下星星了！'], ['💖', '#ff7eb6', '下愛心了！'], ['🌸', '#ffc0d8', '下花瓣了！'], ['🍬', '#ff9a2e', '下糖果了！'], ['🎈', '#e8453c', '氣球飄飄！']],
@@ -235,10 +235,10 @@ ShakeGame({
 
 // ---- 搖搖飲料店 ----
 ShakeGame({
-  id: 'shakedrink', name: '搖搖飲料店', icon: '🧋', color: '#c98a4b',
+  id: 'shakedrink', name: '搖搖飲料店', icon: '🥛', color: '#c98a4b',
   desc: '客人點飲料了！快搖好一杯送出去！（手機限定）',
   howto: '📱 手機限定：客人點了飲料，用力搖手機把雪克杯搖好（搖滿條條就會自動送出）。客人等太久會生氣走掉喔！越快送出小費越多，限時 45 秒。（電腦：狂點畫面或按空白鍵）',
-  TIME: 45, DRINKS: [['🧋', '珍珠奶茶', '#c9a07a'], ['🍹', '水果茶', '#ff9a4a'], ['🥤', '汽水', '#7fd8ff'], ['🍵', '綠茶', '#8fd16a'], ['🥛', '牛奶', '#ffffff']],
+  TIME: 45, DRINKS: [['☕', '珍珠奶茶', '#c9a07a'], ['🍹', '水果茶', '#ff9a4a'], ['🥤', '汽水', '#7fd8ff'], ['🍵', '綠茶', '#8fd16a'], ['🥛', '牛奶', '#ffffff']],
   FACES: ['🐶', '🐱', '🐰', '🐻', '🐼', '🦊', '🐸', '🐵'],
   start() { this.t = 0; this.left = this.TIME; this.score = 0; this.over = false; this.overText = '打烊囉！'; this.ls = null; this.served = 0; this.q = []; this.m = 0; this.cool = 0; this.nextT = 0; },
   update(dt) {
@@ -267,7 +267,7 @@ ShakeGame({
     Puppet.draw(c, App.pup, V.W * 0.85, V.H * 0.95, Math.min(V.H * 0.28, 200), Puppet.Poses.idle(this.t));
     TiltUI.hint(c, this, V.H * 0.55, '#4a3520', true);
   },
-  hud() { return { L: `<b>${this.score}</b> 分　🧋 ${this.served}`, R: `⏱ ${Math.ceil(this.left)}` }; },
+  hud() { return { L: `<b>${this.score}</b> 分　🥤 ${this.served}`, R: `⏱ ${Math.ceil(this.left)}` }; },
 });
 
 // ---- 搖存錢筒 ----

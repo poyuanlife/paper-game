@@ -135,7 +135,7 @@ registerGame({
 
 // ---- 相撲推推 ----
 registerGame({
-  id: 'sumo', name: '彈珠相撲', icon: '🟠', color: '#d9643a', tilt: true,
+  id: 'sumo', name: '彈珠相撲', icon: '🤼', color: '#d9643a', tilt: true,
   desc: '把對手的彈珠撞出擂台！（手機限定）',
   howto: '📱 手機限定：傾斜手機讓你的彈珠（有紙片人的那顆）衝過去，把紅色彈珠撞出圓形擂台！自己掉出去會少一條命。一共 5 回合，對手會越來越多。（電腦用方向鍵）',
   start() { this.t = 0; this.score = 0; this.over = false; this.overText = '相撲冠軍！'; this.round = 0; this.lives = 3; this.newRound(); },

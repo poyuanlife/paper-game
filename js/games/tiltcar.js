@@ -65,5 +65,5 @@ registerGame({
     Kid.text(c, `${Math.round(this.speed / 4)} km/h`, V.W - 80, V.H - 30, 22, '#2a2a33', 6);
     if (this.t < 5 || (!Tilt.active && this.t < 12)) Kid.text(c, Tilt.hint(), V.W / 2, V.H * 0.45, 18, '#2a2a33', 6);
   },
-  hud() { return { L: `<b>${this.score}</b> 分　💰 ${this.coins}`, R: '❤️'.repeat(Math.max(0, this.lives)) + '🤍'.repeat(Math.max(0, 3 - this.lives)) }; },
+  hud() { return { L: `<b>${this.score}</b> 分　💰 ${this.coins}`, R: '❤️'.repeat(Math.max(0, this.lives)) + '🖤'.repeat(Math.max(0, 3 - this.lives)) }; },
 });

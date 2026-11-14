@@ -14,7 +14,7 @@ function drawWhere(c, who, pos, x, y, s) {
   if (inside) { c.save(); c.beginPath(); c.rect(x - s, y - s * 0.12, s * 2, s); c.clip(); Kid.emoji(c, '📦', x, y, s); c.restore(); }
 }
 KidQuiz({
-  id: 'whereis', name: '小動物在哪裡', icon: '📦', color: '#c98a4b',
+  id: 'whereis', name: '小動物在哪裡', icon: '🐾', color: '#c98a4b',
   desc: '聽聽看小動物在箱子的上面、下面還是裡面？',
   howto: '聽題目：「小貓在箱子的上面」，從下面三張圖裡找出對的那一張！學會上面、下面、左邊、右邊、裡面。一共 10 題。',
   make(g) {
@@ -30,13 +30,13 @@ KidQuiz({
 
 // ---- 相反配對 ----
 const OPP = [
-  [['🐘', '大'], ['🐭', '小']], [['🔥', '熱'], ['🧊', '冷']], [['☀️', '白天'], ['🌙', '晚上']], [['🐢', '慢'], ['🚀', '快']],
+  [['🐘', '大'], ['🐭', '小']], [['🔥', '熱'], ['❄️', '冷']], [['☀️', '白天'], ['🌙', '晚上']], [['🐢', '慢'], ['🚀', '快']],
   [['😄', '開心'], ['😢', '難過']], [['🦒', '高'], ['🐛', '矮']], [['🍬', '甜'], ['🍋', '酸']], [['💡', '亮'], ['🌑', '暗']],
 ];
 KidQuiz({
   id: 'opposites', name: '相反配對', icon: '🔄', color: '#e9654b',
   desc: '大對小、熱對冷，找出相反的那一個！',
-  howto: '上面有一個東西，例如 🔥 很「熱」。從下面找出跟它「相反」的那一個（很「冷」的 🧊）！一共 10 題。',
+  howto: '上面有一個東西，例如 🔥 很「熱」。從下面找出跟它「相反」的那一個（很「冷」的 ❄️）！一共 10 題。',
   make(g) {
     const P = pick(OPP), s = Math.random() < 0.5 ? 0 : 1, given = P[s], ans0 = P[1 - s];
     const others = Kid.shuffle(OPP.filter(p => p !== P).map(p => p[Math.floor(Math.random() * 2)])).slice(0, 2), opts = Kid.shuffle([ans0, ...others]);

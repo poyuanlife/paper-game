@@ -78,5 +78,5 @@ registerGame({
     const b = this.ball; Paper.circle(c, b.x, b.y, b.r, '#ffffff', { border: 3, blur: 8, shadowColor: 'rgba(255,255,255,0.6)' });
     if (b.stuck) Kid.text(c, '👆 點一下發球', V.W / 2, V.H * 0.62, 30, '#fff6c8');
   },
-  hud() { return { L: `<b>${this.score}</b> 分　第 ${this.level + 1} 關`, R: '❤️'.repeat(Math.max(0, this.lives)) + '🤍'.repeat(Math.max(0, 3 - this.lives)) }; },
+  hud() { return { L: `<b>${this.score}</b> 分　第 ${this.level + 1} 關`, R: '❤️'.repeat(Math.max(0, this.lives)) + '🖤'.repeat(Math.max(0, 3 - this.lives)) }; },
 });

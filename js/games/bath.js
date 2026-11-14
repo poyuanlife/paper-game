@@ -79,5 +79,5 @@ registerGame({
     c.restore();
     if (this.t < 3.5 && !Input.down) Kid.text(c, '👆 按住刷一刷泥巴', V.W / 2, Kid.portrait() ? 130 : 90, 30, '#2f9ab0');
   },
-  hud() { const left = this.spots.filter(s => s.dirt > 0).length; return { L: `<b>${this.score}</b> 分`, R: `第 ${this.round + 1} / ${this.ROUNDS.length} 回　🟤 ${left}` }; },
+  hud() { const left = this.spots.filter(s => s.dirt > 0).length; return { L: `<b>${this.score}</b> 分`, R: `第 ${this.round + 1} / ${this.ROUNDS.length} 回　🦠 ${left}` }; },
 });

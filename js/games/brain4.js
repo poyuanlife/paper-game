@@ -8,7 +8,7 @@ const NumPad = { btn(i) { const P = Kid.portrait(), w = Math.min((V.W - 40) / (P
 
 // ---- 1A2B ----
 registerGame({
-  id: 'codebreak', name: '猜數字 1A2B', icon: '🔢', color: '#5b6fd6',
+  id: 'codebreak', name: '猜數字 1A2B', icon: '🔐', color: '#5b6fd6',
   desc: '猜出 4 個不重複的數字密碼！A 是位置對，B 是數字對位置錯。',
   howto: '電腦藏了 4 個不重複的數字。輸入你的猜測，會告訴你幾 A 幾 B：A = 數字和位置都對，B = 數字對但位置錯。用最少次數猜到 4A！最多 10 次。',
   start() { this.t = 0; this.score = 0; this.over = false; this.overText = ''; const d = Kid.shuffle([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]); this.code = d.slice(0, 4); this.cur = []; this.hist = []; this.endT = 0; },
@@ -41,7 +41,7 @@ registerGame({
 
 // ---- 算 24 ----
 registerGame({
-  id: 'make24', name: '算 24', icon: '🃏', color: '#e9654b',
+  id: 'make24', name: '算 24', icon: '➗', color: '#e9654b',
   desc: '用四個數字加減乘除，算出 24！',
   howto: '點一個數字，再點運算符號（＋ − × ÷），再點另一個數字，兩個就會合成一個。四個數字合成最後一個 24 就成功！算錯了可以按「重來」。一共 5 題。',
   N: 5,
@@ -80,7 +80,7 @@ registerGame({
 
 // ---- 孤獨跳棋 ----
 registerGame({
-  id: 'pegsolo', name: '孤獨跳棋', icon: '⚪', color: '#8a5a34',
+  id: 'pegsolo', name: '孤獨跳棋', icon: '📌', color: '#8a5a34',
   desc: '棋子跳過旁邊的棋子把它吃掉，剩越少越好！',
   howto: '點一顆棋子，再點隔一格的空洞，它就會跳過中間的棋子並把它吃掉（只能上下左右）。一直跳到不能再跳，最後只剩一顆就是大師！剩越少分數越高。',
   start() { this.t = 0; this.score = 0; this.over = false; this.overText = ''; this.b = []; for (let r = 0; r < 7; r++) for (let c = 0; c < 7; c++) { const ok = (r >= 2 && r <= 4) || (c >= 2 && c <= 4); this.b.push(ok ? (r === 3 && c === 3 ? 0 : 1) : -1); } this.sel = -1; this.endT = 0; this.last = null; },
@@ -176,7 +176,7 @@ registerGame({
 
 // ---- 打靶練習 ----
 registerGame({
-  id: 'aimtap', name: '快手打靶', icon: '🎯', color: '#e8453c',
+  id: 'aimtap', name: '快手打靶', icon: '👆', color: '#e8453c',
   desc: '靶子一個一個冒出來，越快點到分數越高！',
   howto: '靶子會在畫面各處冒出來，趁它縮小消失前點它！點到中心分數更多，連續點中有加成。漏掉 5 個就結束。',
   start() { this.t = 0; this.score = 0; this.over = false; this.overText = ''; this.tg = []; this.spawnT = 0.5; this.miss = 0; this.hits = 0; this.combo = 0; },
@@ -199,7 +199,7 @@ registerGame({
 
 // ---- 舒爾特方格 ----
 registerGame({
-  id: 'schulte', name: '數字快找', icon: '🔟', color: '#3c9a8a',
+  id: 'schulte', name: '數字快找', icon: '🧐', color: '#3c9a8a',
   desc: '1 到 25 的數字亂排，照順序最快點完！',
   howto: '格子裡有亂排的數字，從 1 開始照順序點，越快點完分數越高！點錯會扣 1 秒。一共 3 關（3×3、4×4、5×5）。',
   SZ: [3, 4, 5],
@@ -222,7 +222,7 @@ registerGame({
 
 // ---- 閃現記憶 ----
 registerGame({
-  id: 'flashgrid', name: '閃現記憶', icon: '🟨', color: '#ffb31f',
+  id: 'flashgrid', name: '閃現記憶', icon: '⚡', color: '#ffb31f',
   desc: '格子亮一下就消失，記住位置再點出來！',
   howto: '有幾個格子會亮一下，記住它們的位置！消失後把它們全部點出來。全對就會多一格，點錯 3 次就結束。',
   start() { this.t = 0; this.score = 0; this.over = false; this.overText = ''; this.lives = 3; this.cnt = 3; this.best = 0; this.round(); },

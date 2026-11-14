@@ -1,7 +1,7 @@
 'use strict';
 // 疊疊紙片人：紙片人躺著被曬衣夾夾著，在上面左右晃。點一下放開，疊在下面那個的上面。歪太多會掉下去。
 registerGame({
-  id: 'stack', name: '疊疊紙片人', icon: '🗼', color: '#2fb39a',
+  id: 'stack', name: '疊疊紙片人', icon: '🏗️', color: '#2fb39a',
   desc: '把紙片人一個一個疊上去，疊到天上去！',
   howto: '紙片人會在上面左右晃，點一下畫面（或空白鍵）放下去。要疊在下面那個的上面，歪太多會掉下去。放在正中間是 PERFECT，連續 PERFECT 加分更多！掉 3 個就結束。',
 
@@ -162,7 +162,7 @@ registerGame({
     }
   },
   hud() {
-    const hearts = '❤️'.repeat(Math.max(0, this.lives)) + '🤍'.repeat(Math.max(0, 3 - this.lives));
+    const hearts = '❤️'.repeat(Math.max(0, this.lives)) + '🖤'.repeat(Math.max(0, 3 - this.lives));
     return { L: `<b>${this.score}</b> 分`, R: `${this.floors} 層　${hearts}` };
   },
 });

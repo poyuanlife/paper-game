@@ -341,7 +341,7 @@ $('bInstall').onclick = async () => {
 };
 
 // ---- 換角色（人 / 寵物 / 預設）----
-const CHAR_NAMES = { me: '🧍 我', pet: '🐶 寵物', default: '🧒 預設' };
+const CHAR_NAMES = { me: '🙋 我', pet: '🐶 寵物', default: '🧒 預設' };
 function charCycle() { return ['me', 'pet', 'default'].filter(s => s === 'default' || App.chars[s]); }
 function syncCharBtn() {
   const list = charCycle(), b = $('bChar');

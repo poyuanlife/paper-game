@@ -100,14 +100,14 @@ registerGame({
     if (this.turn === 1 && !this.end && !this.drop) Kid.text(c, '👇 點一個直欄', G.x + cs * this.C / 2, G.y - cs * 0.6, 22, '#3f6fe0');
     BoardUI.foe(c, this, this.say);
   },
-  hud() { return { L: `<b>${this.score}</b> 分　🔴 ${this.w[1]} : ${this.w[2]} 🟡`, R: `第 ${Math.min(this.round + 1, 3)} / 3 局` }; },
+  hud() { return { L: `<b>${this.score}</b> 分　🔴 ${this.w[1]} : ${this.w[2]} 🌕`, R: `第 ${Math.min(this.round + 1, 3)} / 3 局` }; },
 });
 
 // ---- 蛇梯棋 ----
 registerGame({
-  id: 'ladders', name: '溜滑梯棋', icon: '🎲', color: '#45ad4a', kid: true,
+  id: 'ladders', name: '溜滑梯棋', icon: '🏁', color: '#45ad4a', kid: true,
   desc: '擲骰子前進，爬梯子往上、溜滑梯往下！',
-  howto: '點「擲骰子」，紙片人就會往前走幾格。走到 🪜 梯子底下可以爬上去，走到滑梯頂端會溜下來！先走到第 30 格的人贏。跟小狗比賽！',
+  howto: '點「擲骰子」，紙片人就會往前走幾格。走到 梯子底下可以爬上去，走到滑梯頂端會溜下來！先走到第 30 格的人贏。跟小狗比賽！',
   N: 30, COLS: 5,
   JUMP: { 3: 11, 8: 16, 14: 23, 19: 27, 13: 4, 21: 10, 26: 17, 29: 20 },
   ZH: ['零', '一', '二', '三', '四', '五', '六'],

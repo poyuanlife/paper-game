@@ -10,7 +10,7 @@ registerGame({
     { id: 'party', name: '開心派對', icon: '🎉', bpm: 112, key: 0, prog: ['I', 'vi', 'IV', 'V'], seed: 20261028, lead: 'square', drums: 'pop', tag: '輕快流行' },
     { id: 'beach', name: '夏日海灘', icon: '🏖️', bpm: 100, key: 5, prog: ['I', 'IV', 'vi', 'V'], seed: 777, lead: 'triangle', drums: 'reggae', tag: '悠閒搖擺' },
     { id: 'lullaby', name: '星空搖籃曲', icon: '🌙', bpm: 84, key: 7, prog: ['vi', 'IV', 'I', 'V'], seed: 31415, lead: 'sine', drums: 'soft', tag: '慢慢來' },
-    { id: 'march', name: '紙片進行曲', icon: '🥁', bpm: 120, key: -2, prog: ['I', 'IV', 'V', 'I'], seed: 4242, lead: 'square', drums: 'march', tag: '精神抖擻' },
+    { id: 'march', name: '紙片進行曲', icon: '🎺', bpm: 120, key: -2, prog: ['I', 'IV', 'V', 'I'], seed: 4242, lead: 'square', drums: 'march', tag: '精神抖擻' },
     { id: 'rocket', name: '火箭衝衝衝', icon: '🚀', bpm: 140, key: 2, prog: ['vi', 'IV', 'I', 'V'], seed: 9001, lead: 'sawtooth', drums: 'rock', tag: '超快！' },
   ],
   CH: { I: [48, 52, 55], ii: [50, 53, 57], IV: [41, 45, 48], V: [43, 47, 50], vi: [45, 48, 52] },

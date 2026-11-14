@@ -151,7 +151,7 @@ ShakeGame({
 
 // ---- 釘釘子 ----
 ShakeGame({
-  id: 'hammer', name: '釘釘子', icon: '🔨', color: '#8a5a34',
+  id: 'hammer', name: '釘釘子', icon: '🔩', color: '#8a5a34',
   desc: '每搖一下就敲一下槌子，把釘子都釘進木板！（手機限定）',
   howto: '📱 手機限定：手機就是槌子！每搖一下就敲一下，把釘子敲進木板裡。釘完一根換下一根，越後面越硬。限時 30 秒，看你能釘幾根！（電腦：狂點畫面或按空白鍵）',
   TIME: 30,
@@ -196,7 +196,7 @@ ShakeGame({
     Paper.rect(c, x - 70 + sh, y - 120, 140, 220, 'rgba(255,255,255,0.7)', 30, { border: 5 });
     const col = p > 0.75 ? '#ffe680' : p > 0.55 ? '#fffdf5' : '#f4f8ff', lvl = 160 + p * 30;
     c.fillStyle = col; c.fillRect(x - 60 + sh, y + 90 - lvl, 120, lvl);
-    if (this.st === 'show') { Paper.rect(c, x - 110, y + 150, 220, 70, '#e9a54b', 14, { border: 4 }); Kid.emoji(c, this.res >= 30 ? '🍰' : '🧈', x, y + 120, 80); }
+    if (this.st === 'show') { Paper.rect(c, x - 110, y + 150, 220, 70, '#e9a54b', 14, { border: 4 }); Kid.emoji(c, this.res >= 30 ? '🍰' : '🥛', x, y + 120, 80); }
     const tx = V.W / 2 - 140, ty = Kid.portrait() ? 150 : 100; Paper.rect(c, tx, ty, 280, 24, '#ffffff', 12, { border: 3 });
     c.fillStyle = 'rgba(69,173,74,0.5)'; c.fillRect(tx + 280 * 0.55, ty + 3, 280 * 0.2, 18); c.fillStyle = 'rgba(255,210,63,0.6)'; c.fillRect(tx + 280 * 0.75, ty + 3, 280 * 0.25 - 3, 18);
     c.fillStyle = '#2a2a33'; c.fillRect(tx + 280 * p - 3, ty - 6, 6, 36);
@@ -208,7 +208,7 @@ ShakeGame({
 
 // ---- 釣大魚 ----
 registerGame({
-  id: 'reel', name: '釣大魚', icon: '🎣', color: '#2f7fc1', tilt: true,
+  id: 'reel', name: '釣大魚', icon: '🦈', color: '#2f7fc1', tilt: true,
   desc: '大魚上鉤了！拿手機畫圓圈捲線，小心線會斷！（手機限定）',
   howto: '📱 手機限定：拿著手機一直「畫圓圈」就能捲線，把魚拉上來！捲太快線會太緊（紅色）就斷掉了，要快慢剛好。一共 3 條魚，越快釣上來分數越高。（電腦：滑鼠按住繞著中間畫圈）',
   FISH: [['🐟', 60, 3], ['🐠', 80, 4], ['🦈', 110, 6]],
@@ -271,7 +271,7 @@ registerGame({
 
 // ---- 傾斜保齡球 ----
 registerGame({
-  id: 'tiltbowl', name: '傾斜保齡球', icon: '🎳', color: '#5b6fd6', tilt: true,
+  id: 'tiltbowl', name: '傾斜保齡球', icon: '🥌', color: '#5b6fd6', tilt: true,
   desc: '傾斜手機讓球往前滾，撞倒所有球瓶！（手機限定）',
   howto: '📱 手機限定：手機往前歪，球就會往前滾；左右歪可以調方向。撞倒越多球瓶分數越高，全倒 +20！一共 5 球。（電腦用方向鍵）',
   N: 5,
@@ -304,7 +304,7 @@ registerGame({
 
 // ---- 彈珠賽跑 ----
 registerGame({
-  id: 'marblerace', name: '彈珠賽跑', icon: '🔮', color: '#3c9a8a', tilt: true,
+  id: 'marblerace', name: '彈珠賽跑', icon: '🥇', color: '#3c9a8a', tilt: true,
   desc: '跟三顆彈珠比賽，傾斜手機踩加速板、閃開石頭！（手機限定）',
   howto: '📱 手機限定：左右傾斜手機控制彈珠，踩到 ⚡ 加速板會變快，撞到石頭會變慢。跟另外 3 顆彈珠比賽，最先滾到 500 公尺終點的贏！（電腦用 ← → 鍵）',
   LEN: 500,

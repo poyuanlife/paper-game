@@ -57,7 +57,7 @@ registerGame({
   SC: [
     { name: '農場', bg: 'meadow', st: ['🐄', '🐖', '🐑', '🐔', '🐤', '🌻', '🌳', '🏠', '🚜', '🐴', '🐶', '🌈'] },
     { name: '海底', bg: 'sea', st: ['🐟', '🐠', '🐡', '🐙', '🦀', '🐳', '🐬', '🦈', '🐚', '🌿', '⭐', '🐢'] },
-    { name: '太空', bg: 'space', st: ['🚀', '🛸', '🌙', '⭐', '🪐', '👽', '☄️', '🌍', '🛰️', '👾', '🌟', '🔭'] },
+    { name: '太空', bg: 'space', st: ['🚀', '🛸', '🌙', '⭐', '🌠', '👽', '☄️', '🌍', '🛰️', '👾', '🌟', '🔭'] },
   ],
   start() { this.t = 0; this.score = 0; this.over = false; this.overText = '好漂亮的圖！'; this.sc = 0; this.placed = []; this.drag = Kid.makeDrag(); },
   get tray() { const P = Kid.portrait(), h = P ? 170 : 110; return { y: V.H - h, h }; },
@@ -143,7 +143,7 @@ registerGame({
   id: 'shopping', name: '小小超市', icon: '🛒', color: '#45ad4a', kid: true,
   desc: '看看東西要幾元，點錢幣付剛好的錢！',
   howto: '上面的東西有寫價錢，點下面的錢幣把錢放到盤子上，加起來「剛好」就買到了！放太多可以點盤子把錢拿回來。前面只有 1 元，後面會有 5 元和 10 元。一共 8 題。',
-  ITEMS: [['🍎', '蘋果'], ['🍌', '香蕉'], ['🍞', '麵包'], ['🥛', '牛奶'], ['🍪', '餅乾'], ['🧃', '果汁'], ['🍦', '冰淇淋'], ['🥚', '雞蛋'], ['🍓', '草莓'], ['🧸', '小熊']],
+  ITEMS: [['🍎', '蘋果'], ['🍌', '香蕉'], ['🍞', '麵包'], ['🥛', '牛奶'], ['🍪', '餅乾'], ['🥤', '果汁'], ['🍦', '冰淇淋'], ['🥚', '雞蛋'], ['🍓', '草莓'], ['🧸', '小熊']],
   N: 8,
   start() { this.t = 0; this.score = 0; this.over = false; this.overText = '買好東西囉！'; this.q = 0; this.newQ(); },
   onEnter(p) { if (p === 'ready') this.sayQ(); },
@@ -184,7 +184,7 @@ registerGame({
 
 // ---- 骨牌接力 ----
 registerGame({
-  id: 'domino', name: '骨牌接力', icon: '🧱', color: '#7a62b8', kid: true,
+  id: 'domino', name: '骨牌接力', icon: '🚧', color: '#7a62b8', kid: true,
   desc: '在地上排骨牌，推倒第一張，一路倒到鈴鐺！',
   howto: '點地板就會放一張骨牌。骨牌之間不能隔太遠（比骨牌高度還近），排好之後按「推！」，看骨牌能不能一路倒下去敲到最右邊的 🔔 鈴鐺！一共 3 關，倒下越多張分數越高。',
   start() { this.t = 0; this.score = 0; this.over = false; this.overText = '骨牌大師！'; this.lv = 0; this.newLevel(); },

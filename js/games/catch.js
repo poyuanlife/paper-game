@@ -105,7 +105,7 @@ registerGame({
     for (const it of this.items) this.drawItem(c, it);
   },
   hud() {
-    const hearts = '❤️'.repeat(Math.max(0, this.lives)) + '🤍'.repeat(Math.max(0, 3 - this.lives));
+    const hearts = '❤️'.repeat(Math.max(0, this.lives)) + '🖤'.repeat(Math.max(0, 3 - this.lives));
     return { L: `<b>${this.score}</b> 分${this.combo >= 5 ? `　<span class="combo">連續 ${this.combo}</span>` : ''}`, R: `${hearts}　⏱ ${Math.ceil(this.left)}` };
   },
 });

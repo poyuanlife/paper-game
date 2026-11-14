@@ -5,7 +5,7 @@
 
 // ---- 傾斜足球 ----
 registerGame({
-  id: 'tiltsoccer', name: '傾斜足球', icon: '⚽', color: '#3c9a4a', tilt: true,
+  id: 'tiltsoccer', name: '傾斜足球', icon: '🥅', color: '#3c9a4a', tilt: true,
   desc: '傾斜手機滾彈珠，把足球撞進球門！（手機限定）',
   howto: '📱 手機限定：你是裡面有紙片人的彈珠，傾斜手機滾過去撞足球，把 ⚽ 撞進上面的球門！守門員會左右擋球，越後面越厲害。限時 60 秒，看你能進幾球。（電腦用方向鍵）',
   TIME: 60,
@@ -52,7 +52,7 @@ registerGame({
 
 // ---- 滾球進洞 ----
 registerGame({
-  id: 'pocketball', name: '滾球進洞', icon: '🎱', color: '#1f7a55', tilt: true,
+  id: 'pocketball', name: '滾球進洞', icon: '🕹️', color: '#1f7a55', tilt: true,
   desc: '傾斜手機滾彈珠，把彩色球撞進洞裡！（手機限定）',
   howto: '📱 手機限定：傾斜手機讓有紙片人的彈珠滾動，去撞彩色的球，把它們撞進桌子的 6 個洞裡！自己掉進洞會扣分。全部撞進去就過關，越快剩下的時間越多分。限時 90 秒。（電腦用方向鍵）',
   TIME: 90, COLS: ['#ffd23f', '#3f8fe0', '#e8453c', '#9b5bd6', '#ff9a2e', '#45ad4a', '#8a4a24', '#e86fae'],
