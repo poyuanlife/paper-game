@@ -73,10 +73,18 @@ button.corner { position: fixed; top: max(12px, env(safe-area-inset-top)); right
 .tips { margin: 0; padding: 0; list-style: none; font-size: 14.5px; line-height: 1.75; }
 .tips li::before { content: "✔ "; color: #3e9a4b; font-weight: 900; }
 .tips li.no::before { content: "✘ "; color: #d9452b; }
-.seg { display: flex; background: #f2e6cc; border-radius: 14px; padding: 4px; margin: 0 auto 14px; max-width: 340px; }
-.seg button { flex: 1; padding: 9px 6px; border-radius: 11px; font-weight: 900; font-size: 17px; opacity: 0.65; }
+.seg { display: flex; background: #f2e6cc; border-radius: 14px; padding: 4px; margin: 0 auto 14px; max-width: 420px; }
+.seg button { flex: 1; padding: 9px 6px; border-radius: 11px; font-weight: 900; font-size: clamp(14px, 4.2vw, 17px); opacity: 0.65; }
 .seg button.on { background: #fffdf5; opacity: 1; box-shadow: 0 3px 0 #e0d2b5; color: #e0573c; }
-#scrMaker[data-mode="human"] .exPet, #scrMaker[data-mode="pet"] .exHuman { display: none; }
+#scrMaker[data-mode="human"] .exPet, #scrMaker[data-mode="pet"] .exHuman, #scrMaker:not([data-mode="draw"]) .exDraw, #scrMaker[data-mode="draw"] .exHuman, #scrMaker[data-mode="draw"] .exPet { display: none; }
+.exPose.draw rect { fill: #fff; stroke: #e0d2b5; stroke-width: 3; }
+.exPose.draw .line { fill: none; stroke: #3b5bdb; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.exPose.draw circle { fill: none; stroke: #3b5bdb; stroke-width: 3; }
+.exPose.draw .loop { fill: none; stroke: #ff8a3d; stroke-width: 3.5; stroke-dasharray: 7 5; }
+#scrCam[data-mode="draw"] .guide, #scrCam[data-mode="draw"] #camTimer { display: none; }
+.lasHint { margin: 0 0 8px; font-size: 16px; }
+#mkLas { width: 100%; height: min(58vh, 520px); display: block; border-radius: 12px; background: #333; touch-action: none; cursor: crosshair; }
+.seg button { white-space: nowrap; }
 .exPose.pet { width: 104px; }
 #scrCam[data-mode="human"] .guidePet, #scrCam[data-mode="pet"] .guideHuman { display: none; }
 #scrCam .guidePet { top: 22%; height: 52%; width: 92%; }
@@ -150,6 +158,7 @@ button.corner.left { right: auto; left: 14px; width: auto; padding: 0 16px; bord
 .cards > * { min-width: 0; overflow-wrap: anywhere; }
 .panel.wide { transform: none; }   /* 遊戲列表很長，傾斜一點點上下兩端就會歪很多 */
 #gameTabs button { white-space: normal; text-overflow: clip; line-height: 1.15; }
+#mkMode button { white-space: normal; text-overflow: clip; line-height: 1.15; padding: 8px 4px; }
 
 /* 隱私提示：讓玩家一眼就看到 */
 .privacy { margin: 14px 0 4px; padding: 10px 14px; border-radius: 12px; background: #e3f6e5; border: 2px solid #45ad4a; color: #2a7a33; font-size: 17px; font-weight: 900; line-height: 1.5; }

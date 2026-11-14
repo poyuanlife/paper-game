@@ -54,7 +54,7 @@
   <div class="panel">
     <h2>做我的紙片人</h2>
     <div id="mkStart">
-      <div class="seg" id="mkMode"><button data-m="human">🧍 拍人</button><button data-m="pet">🐶 拍貓狗</button></div>
+      <div class="seg" id="mkMode"><button data-m="human">🧍 拍人</button><button data-m="pet">🐶 拍貓狗</button><button data-m="draw">🖍️ 拍畫畫</button></div>
       <div class="example exHuman">
         <svg viewBox="0 0 100 160" class="exPose" aria-hidden="true">
           <circle cx="50" cy="20" r="13"/>
@@ -85,6 +85,20 @@
           <li class="no">不要正面、趴著或捲成一團</li>
         </ul>
       </div>
+      <div class="example exDraw">
+        <svg viewBox="0 0 100 160" class="exPose draw" aria-hidden="true">
+          <rect x="4" y="4" width="92" height="152" rx="6"/>
+          <circle cx="50" cy="40" r="16"/><path d="M42 58 L58 58 L66 98 L34 98 Z M38 66 L22 80 M62 66 L78 80 M44 98 L42 132 M56 98 L58 132" class="line"/>
+          <path d="M18 28 Q10 80 24 140 Q60 150 82 136 Q94 80 80 22 Q50 10 18 28 Z" class="loop"/>
+        </svg>
+        <ul class="tips">
+          <li class="ok"><b>畫放平</b>，從正上方拍</li>
+          <li class="ok">光線充足，不要有手機的影子</li>
+          <li class="ok">拍好後，<b>用手指圈出那個人</b></li>
+          <li class="ok">站著、手腳分開的人最好動</li>
+          <li class="no">鉛筆、淡色的線比較抓不到</li>
+        </ul>
+      </div>
       <div class="btnRow">
         <button id="mkCam" class="big">📷 拍照</button>
         <button id="mkAlbum" class="big alt">🖼️ 從相簿選</button>
@@ -92,14 +106,23 @@
       <button id="mkDefault" class="link">改用預設角色</button>
       <input type="file" id="fileIn" accept="image/*" hidden>
     </div>
+    <div id="mkLasso" class="hidden">
+      <p class="lasHint"><b>用手指圈出要的那個人</b>（旁邊的名字、別的圖不要圈到）</p>
+      <canvas id="mkLas"></canvas>
+      <div class="btnRow">
+        <button id="mkLasOk" class="big" disabled>✔ 圈好了</button>
+        <button id="mkLasRe" class="big alt">↺ 重圈</button>
+      </div>
+      <button id="mkLasBack" class="link">重選照片</button>
+    </div>
     <div id="mkBusy" class="hidden"><div class="spinner"></div><p id="mkMsg">處理中…</p></div>
     <div id="mkResult" class="hidden">
       <canvas id="mkPrev"></canvas>
-      <p id="mkEditHint" class="dim small hidden">拖拉圓點到正確的位置：<b style="color:#e8453c">頭</b>、<b style="color:#d9a400">脖子</b>、<b style="color:#1fa7b5">尾巴根</b>、<b style="color:#3b5bdb">尾巴尖</b>、<b style="color:#c23bc9">前腳</b>、<b style="color:#777">後腳</b></p>
+      <p id="mkEditHint" class="dim small hidden"></p>
       <button id="mkEdit" class="link hidden">🦴 調整關節</button>
       <p id="mkWarn" class="warn"></p>
       <div class="slider"><span>去背</span><span class="dim">寬鬆</span><input type="range" id="mkStr" min="0" max="100" value="45"><span class="dim">嚴格</span><b id="mkStrVal">45</b></div>
-      <p class="dim small">背景沒去乾淨 → 往「嚴格」；身體被切掉 → 往「寬鬆」</p>
+      <p class="dim small" id="mkStrHint">背景沒去乾淨 → 往「嚴格」；身體被切掉 → 往「寬鬆」</p>
       <div class="btnRow">
         <button id="mkUse" class="big">✔ 用這個角色</button>
         <button id="mkRetry" class="big alt">重選照片</button>

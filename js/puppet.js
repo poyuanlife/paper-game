@@ -139,8 +139,13 @@ const Puppet = (() => {
   }
 
   // ---- 人的骨架 ----
-  function humanSpec(J, W, H) {
+  // loose（小朋友的畫）：手腳只拿骨頭旁邊的線條，離手腳比較遠的（例如垂下來的長頭髮）留在身體上，不會跟著手甩
+  function humanSpec(J, W, H, d, loose) {
     const sw = Math.max(dist(J.shL, J.shR), H * 0.12);
+    const LIMB = { upperL: [[J.shL, J.elL]], foreL: [[J.elL, J.wrL], [J.wrL, J.hnL]], upperR: [[J.shR, J.elR]], foreR: [[J.elR, J.wrR], [J.wrR, J.hnR]],
+      thighL: [[J.hipL, J.knL]], shinL: [[J.knL, J.anL], [J.anL, J.ftL]], thighR: [[J.hipR, J.knR]], shinR: [[J.knR, J.anR], [J.anR, J.ftR]] };
+    const reach = sw * 0.42, near = (n, px, py) => LIMB[n].some(([a, b]) => segDist(px, py, a, b) <= reach);
+    const anyLimb = (px, py) => Object.keys(LIMB).some(n => near(n, px, py));
     // 肩膀到髖部圍起來的四邊形一定算身體（不然腋下的衣服會被分給手臂，舉手時跟著飛走）
     const quad = [J.shL, J.shR, J.hipR, J.hipL];
     const inQuad = (px, py) => { let s = 0; for (let i = 0; i < 4; i++) { const a = quad[i], b = quad[(i + 1) % 4], c = (b.x - a.x) * (py - a.y) - (b.y - a.y) * (px - a.x); if (c !== 0) { if (s && Math.sign(c) !== s) return false; s = Math.sign(c); } } return true; };
@@ -156,8 +161,12 @@ const Puppet = (() => {
         thighR: { segs: [[J.hipR, J.knR]] }, shinR: { segs: [[J.knR, J.anR], [J.anR, J.ftR]] },
       },
       force: (px, py) => inQuad(px, py) ? 'torso' : null,
-      allow: (n, px, py) => !(n === 'head' && py > J.neck.y + sw * 0.08) &&                                        // 頭只在脖子以上
-        !(n === 'torso' && (py < J.neck.y - sw * 0.15 || py > J.pelvis.y + sw * 0.12)),                            // 身體不要伸到兩腿中間
+      allow: (n, px, py) => {
+        if (loose && LIMB[n]) return near(n, px, py);
+        if (loose && n === 'torso' && !anyLimb(px, py) && py > J.neck.y) return true;
+        return !(n === 'head' && py > J.neck.y + sw * 0.08) &&                                        // 頭只在脖子以上
+          !(n === 'torso' && (py < J.neck.y - sw * 0.15 || py > J.pelvis.y + sw * 0.12));             // 身體不要伸到兩腿中間
+      },
       caps: [
         ['torso', 'upperL', J.shL, 0.17], ['torso', 'upperR', J.shR, 0.17], ['torso', 'head', J.neck, 0.1],
         ['torso', 'thighL', J.hipL, 0.2], ['torso', 'thighR', J.hipR, 0.2],
@@ -169,7 +178,7 @@ const Puppet = (() => {
   // J0.kind === 'pet' → 四腳動物（js/pet.js）
   function build(src, J0) {
     if (J0.kind === 'pet') return PetPuppet.build(src, J0, cutParts);
-    const r = cutParts(src, J0, humanSpec), J = r.J;
+    const r = cutParts(src, J0, J0.draw ? (J, W, H, d) => humanSpec(J, W, H, d, true) : humanSpec), J = r.J;
     const foot = Math.max(J.ftL.y, J.ftR.y, J.anL.y, J.anR.y);
     return Object.assign(r, { foot: { x: J.pelvis.x, y: Math.min(r.H, foot + r.bw) } });
   }

@@ -1,21 +1,24 @@
 'use strict';
 // =====================================================
-//  做紙片人：選「拍人」或「拍貓狗」→ 拍照（有倒數）或從相簿選 → 去背 → 切成紙偶 → 預覽 → 存起來
-//  人存在 'me'、寵物存在 'pet'，首頁可以切換。寵物的關節可以用手拖拉修正。
+//  做紙片人：選「拍人」「拍貓狗」或「拍畫畫」→ 拍照（有倒數）或從相簿選 → 去背 → 切成紙偶 → 預覽 → 存起來
+//  拍畫畫：先讓使用者用手指把畫裡的那個人圈起來，再去背。
+//  人（和畫）存在 'me'、寵物存在 'pet'，首頁可以切換。寵物、畫、插圖的關節可以用手拖拉修正。
 // =====================================================
 const Maker = (() => {
   let cur = null, prevPup = null, busy = false, stream = null, facing = 'user', timer = Store.get('camTimer', 10), counting = 0;
   let mode = Store.get('makeMode', 'human'), editing = false, drag = null;
-  const part = id => { for (const s of ['mkStart', 'mkBusy', 'mkResult']) $(s).classList.toggle('hidden', s !== id); };
+  let lasImg = null, lasPts = [], lasClosed = false, lasDraw = false, lasBmp = null;
+  const part = id => { for (const s of ['mkStart', 'mkLasso', 'mkBusy', 'mkResult']) $(s).classList.toggle('hidden', s !== id); };
   const err = m => { $('mkErr').textContent = m || ''; };
 
   function setMode(m) {
     mode = m; Store.set('makeMode', m);
     $('scrMaker').dataset.mode = m; $('scrCam').dataset.mode = m;
     document.querySelectorAll('#mkMode button').forEach(b => b.classList.toggle('on', b.dataset.m === m));
-    $('camHint').textContent = m === 'pet' ? '從側面拍，讓牠的全身（四隻腳）都在框裡' : '把手機立好，退到全身都在框裡，再按快門（有倒數）';
-    // 拍寵物通常是別人拿手機，用後鏡頭；自拍全身用前鏡頭
-    facing = m === 'pet' ? 'environment' : 'user';
+    $('camHint').textContent = m === 'pet' ? '從側面拍，讓牠的全身（四隻腳）都在框裡' : m === 'draw' ? '把畫放平，從正上方拍，整個人都要在畫面裡' : '把手機立好，退到全身都在框裡，再按快門（有倒數）';
+    $('mkStrHint').textContent = m === 'draw' ? '線條沒抓到 → 往「寬鬆」；紙上的髒點也被抓到 → 往「嚴格」' : '背景沒去乾淨 → 往「嚴格」；身體被切掉 → 往「寬鬆」';
+    // 拍寵物、拍畫通常是拿著手機拍別的東西，用後鏡頭；自拍全身用前鏡頭
+    facing = m === 'human' ? 'user' : 'environment';
   }
   document.querySelectorAll('#mkMode button').forEach(b => b.onclick = () => { Sfx.play('click'); setMode(b.dataset.m); });
   setMode(mode);
@@ -25,6 +28,11 @@ const Maker = (() => {
   async function process(src) {
     if (busy) return; busy = true; err(''); part('mkBusy');
     try {
+      if (mode === 'draw') {
+        $('mkMsg').textContent = '讀取照片中…';
+        lasImg = await Cutout.loadImage(src); busy = false;
+        part('mkLasso'); lasReset(); return;
+      }
       const r = await Cutout.cut(src, m => { $('mkMsg').textContent = m; }, +$('mkStr').value, mode);
       setResult(r);
     } catch (e) { console.error(e); part(cur ? 'mkResult' : 'mkStart'); err('失敗了：' + (e && e.message || e)); }
@@ -35,7 +43,7 @@ const Maker = (() => {
     const J = r.J || Puppet.jointsFromLandmarks(r.lm, r.canvas);
     cur.J = J; prevPup = Puppet.build(r.canvas, J);
     $('mkWarn').innerHTML = r.warn.map(w => '⚠ ' + w).join('<br>');
-    $('mkEdit').classList.toggle('hidden', J.kind !== 'pet');
+    $('mkEdit').classList.toggle('hidden', !canEdit());
     setEdit(false);
     part('mkResult');
   }
@@ -62,10 +70,77 @@ const Maker = (() => {
   };
   $('mkDefault').onclick = () => { Sfx.play('click'); App.useChar('default'); App.go('home'); };
 
-  // ---- 寵物關節編輯：在預覽上拖拉圓點 ----
-  const PTS = [['head', '#e8453c'], ['neck', '#d9a400'], ['tailB', '#1fa7b5'], ['tailT', '#3b5bdb'], ['footF', '#c23bc9'], ['footB', '#777']];
+  // ---- 畫畫：用手指圈出要的那個人 ----
+  function lasFit() {
+    const c = $('mkLas'), w = c.clientWidth, h = c.clientHeight, s = Math.min(w / lasImg.width, h / lasImg.height);
+    return { s, ox: (w - lasImg.width * s) / 2, oy: (h - lasImg.height * s) / 2 };
+  }
+  function lasReset() { lasPts = []; lasClosed = false; lasDraw = false; $('mkLasOk').disabled = true; lasBmp = null; requestAnimationFrame(drawLasso); }
+  const lasPath = (x, f) => { x.beginPath(); lasPts.forEach((p, i) => { const a = f.ox + p.x * f.s, b = f.oy + p.y * f.s; i ? x.lineTo(a, b) : x.moveTo(a, b); }); };
+  function drawLasso() {
+    if (!lasImg || $('mkLasso').classList.contains('hidden')) return;
+    const c = $('mkLas'), x = c.getContext('2d'), d = Math.min(2, devicePixelRatio || 1), w = c.clientWidth, h = c.clientHeight;
+    if (c.width !== Math.round(w * d) || c.height !== Math.round(h * d)) { c.width = Math.round(w * d); c.height = Math.round(h * d); }
+    if (!lasBmp) { lasBmp = document.createElement('canvas'); lasBmp.width = lasImg.width; lasBmp.height = lasImg.height; lasBmp.getContext('2d').putImageData(lasImg, 0, 0); }
+    const f = lasFit();
+    x.setTransform(d, 0, 0, d, 0, 0); x.clearRect(0, 0, w, h);
+    x.drawImage(lasBmp, f.ox, f.oy, lasImg.width * f.s, lasImg.height * f.s);
+    if (lasPts.length < 2) return;
+    if (lasClosed) {   // 圈外面變暗
+      x.save(); lasPath(x, f); x.closePath(); x.rect(0, 0, w, h); x.fillStyle = 'rgba(0,0,0,0.5)'; x.fill('evenodd'); x.restore();
+    }
+    lasPath(x, f); if (lasClosed) x.closePath();
+    x.lineJoin = 'round'; x.lineCap = 'round';
+    x.strokeStyle = '#fff'; x.lineWidth = 6; x.stroke();
+    x.strokeStyle = '#ff8a3d'; x.lineWidth = 3.5; x.setLineDash([9, 6]); x.stroke(); x.setLineDash([]);
+  }
+  const lasLocal = e => { const r = $('mkLas').getBoundingClientRect(), f = lasFit(); return { x: clamp((e.clientX - r.left - f.ox) / f.s, 0, lasImg.width), y: clamp((e.clientY - r.top - f.oy) / f.s, 0, lasImg.height) }; };
+  $('mkLas').addEventListener('pointerdown', e => {
+    if (!lasImg) return; e.preventDefault();
+    lasPts = [lasLocal(e)]; lasClosed = false; lasDraw = true; $('mkLasOk').disabled = true;
+    try { $('mkLas').setPointerCapture(e.pointerId); } catch (er) {}
+    drawLasso();
+  });
+  $('mkLas').addEventListener('pointermove', e => {
+    if (!lasDraw) return;
+    const p = lasLocal(e), q = lasPts[lasPts.length - 1];
+    if (Math.hypot(p.x - q.x, p.y - q.y) * lasFit().s >= 4) { lasPts.push(p); drawLasso(); }
+  });
+  const lasEnd = () => {
+    if (!lasDraw) return; lasDraw = false;
+    // 圈太小（只是點一下）就不算
+    let a = 0; for (let i = 0; i < lasPts.length; i++) { const p = lasPts[i], q = lasPts[(i + 1) % lasPts.length]; a += p.x * q.y - q.x * p.y; }
+    lasClosed = lasPts.length >= 6 && Math.abs(a) / 2 > lasImg.width * lasImg.height * 0.004;
+    if (!lasClosed) lasPts = [];
+    $('mkLasOk').disabled = !lasClosed; if (lasClosed) Sfx.play('pop');
+    drawLasso();
+  };
+  $('mkLas').addEventListener('pointerup', lasEnd);
+  $('mkLas').addEventListener('pointercancel', lasEnd);
+  addEventListener('resize', () => requestAnimationFrame(drawLasso));
+  $('mkLasRe').onclick = () => { Sfx.play('click'); lasReset(); };
+  $('mkLasBack').onclick = () => { Sfx.play('click'); lasImg = null; part('mkStart'); };
+  $('mkLasOk').onclick = async () => {
+    if (!lasClosed || busy) return; Sfx.play('click');
+    busy = true; err(''); part('mkBusy'); $('mkMsg').textContent = '把畫變成紙片人中…';
+    await new Promise(r => setTimeout(r, 30));
+    try { setResult(Cutout.cutDrawing(lasImg, lasPts, +$('mkStr').value)); }
+    catch (e) { console.error(e); part('mkLasso'); requestAnimationFrame(drawLasso); err('失敗了：' + (e && e.message || e)); }
+    busy = false;
+  };
+
+  // ---- 關節編輯：在預覽上拖拉圓點（寵物、畫、插圖；真人照片的關節是偵測出來的，不用調） ----
+  const PET_PTS = [['head', '#e8453c'], ['neck', '#d9a400'], ['tailB', '#1fa7b5'], ['tailT', '#3b5bdb'], ['footF', '#c23bc9'], ['footB', '#777']];
+  const PET_BONES = [['head', 'neck'], ['neck', 'tailB'], ['tailB', 'tailT'], ['neck', 'footF'], ['tailB', 'footB']];
+  const HUM_PTS = [['top', '#e8453c'], ['neck', '#d9a400'], ['pelvis', '#1fa7b5'], ['hnL', '#c23bc9'], ['hnR', '#c23bc9'], ['ftL', '#3b5bdb'], ['ftR', '#3b5bdb']];
+  const HUM_BONES = [['top', 'neck'], ['neck', 'pelvis'], ['neck', 'hnL'], ['neck', 'hnR'], ['pelvis', 'ftL'], ['pelvis', 'ftR']];
+  const isPet = () => !!cur && cur.J.kind === 'pet';
+  const canEdit = () => !!cur && (isPet() || !!cur.J.auto);
+  const PTS = () => isPet() ? PET_PTS : HUM_PTS;
   function setEdit(on) {
-    editing = on && !!cur && cur.J.kind === 'pet';
+    editing = on && canEdit();
+    const names = isPet() ? ['頭', '脖子', '尾巴根', '尾巴尖', '前腳', '後腳'] : ['頭頂', '脖子', '屁股', '兩隻手', null, '兩隻腳'];
+    if (editing) $('mkEditHint').innerHTML = '拖拉圓點到正確的位置：' + PTS().map(([, col], i) => names[i] && `<b style="color:${col}">${names[i]}</b>`).filter(Boolean).join(I18N.lang === 'zh' || I18N.lang === 'ja' ? '、' : ', ');
     $('mkPrev').classList.toggle('edit', editing);
     $('mkEditHint').classList.toggle('hidden', !editing);
     $('mkEdit').textContent = editing ? '✔ 調整好了' : '🦴 調整關節';
@@ -80,14 +155,19 @@ const Maker = (() => {
   $('mkPrev').addEventListener('pointerdown', e => {
     if (!editing) return; e.preventDefault();
     const p = local(e), f = fit(); let best = null, bd = 34;
-    for (const [n] of PTS) { const q = cur.J[n], d = Math.hypot(f.ox + q.x * f.s - p.x, f.oy + q.y * f.s - p.y); if (d < bd) { bd = d; best = n; } }
+    for (const [n] of PTS()) { const q = cur.J[n], d = Math.hypot(f.ox + q.x * f.s - p.x, f.oy + q.y * f.s - p.y); if (d < bd) { bd = d; best = n; } }
     if (best) { drag = best; try { $('mkPrev').setPointerCapture(e.pointerId); } catch (er) {} }
   });
   $('mkPrev').addEventListener('pointermove', e => {
     if (!drag) return; const p = local(e), f = fit();
     cur.J[drag] = { x: clamp((p.x - f.ox) / f.s, 0, cur.canvas.width), y: clamp((p.y - f.oy) / f.s, 0, cur.canvas.height) };
   });
-  const endDrag = () => { if (!drag) return; drag = null; try { prevPup = Puppet.build(cur.canvas, cur.J); } catch (e) { err(e.message); } };
+  const endDrag = () => {
+    if (!drag) return; drag = null;
+    // 人：只拖了 7 個主要的點，肩膀、手肘、膝蓋…跟著重算
+    if (!isPet()) cur.J = Object.assign(Cutout.humanFromKeys(cur.J), cur.J.draw ? { draw: 1 } : {});
+    try { prevPup = Puppet.build(cur.canvas, cur.J); } catch (e) { err(e.message); }
+  };
   $('mkPrev').addEventListener('pointerup', endDrag);
   $('mkPrev').addEventListener('pointercancel', endDrag);
 
@@ -101,9 +181,9 @@ const Maker = (() => {
       const f = fit(), J = cur.J, P = n => ({ x: f.ox + J[n].x * f.s, y: f.oy + J[n].y * f.s });
       x.globalAlpha = 0.85; x.drawImage(cur.canvas, f.ox, f.oy, cur.canvas.width * f.s, cur.canvas.height * f.s); x.globalAlpha = 1;
       x.strokeStyle = 'rgba(255,255,255,0.9)'; x.lineWidth = 3; x.setLineDash([6, 5]); x.beginPath();
-      for (const [a, b] of [['head', 'neck'], ['neck', 'tailB'], ['tailB', 'tailT'], ['neck', 'footF'], ['tailB', 'footB']]) { const p = P(a), q = P(b); x.moveTo(p.x, p.y); x.lineTo(q.x, q.y); }
+      for (const [a, b] of isPet() ? PET_BONES : HUM_BONES) { const p = P(a), q = P(b); x.moveTo(p.x, p.y); x.lineTo(q.x, q.y); }
       x.stroke(); x.setLineDash([]);
-      for (const [n, col] of PTS) { const p = P(n), r = drag === n ? 13 : 10; x.fillStyle = col; x.strokeStyle = '#fff'; x.lineWidth = 3; x.beginPath(); x.arc(p.x, p.y, r, 0, Math.PI * 2); x.fill(); x.stroke(); }
+      for (const [n, col] of PTS()) { const p = P(n), r = drag === n ? 13 : 10; x.fillStyle = col; x.strokeStyle = '#fff'; x.lineWidth = 3; x.beginPath(); x.arc(p.x, p.y, r, 0, Math.PI * 2); x.fill(); x.stroke(); }
       return;
     }
     const ph = h * 0.86, k = Math.floor(t / 3) % 3, pose = k === 0 ? Puppet.Poses.dance(t) : k === 1 ? Puppet.Poses.run(t) : Puppet.Poses.jump(Math.sin(t * 3));
@@ -131,7 +211,7 @@ const Maker = (() => {
   $('camShot').onclick = async () => {
     if (counting || !stream) return;
     counting = 1; Sfx.unlock();
-    for (let i = timer; i > 0; i--) {
+    for (let i = mode === 'draw' ? 0 : timer; i > 0; i--) {   // 拍畫不用倒數
       if (!counting) return;
       $('camCount').textContent = i; Sfx.play('tick');
       await new Promise(r => setTimeout(r, 1000));
@@ -146,5 +226,5 @@ const Maker = (() => {
     process(c);
   };
 
-  return { open, drawPreview, process, setMode };
+  return { open, drawPreview, process, setMode, drawLasso };
 })();
