@@ -1,9 +1,10 @@
 // 離線快取（PWA）
 //  - 遊戲本身的檔案：先拿網路上最新的，沒網路才用存起來的（更新後馬上看得到）
-//  - 去背工具、字型（CDN）：存起來就一直用（檔案很大、不會變）
+//  - 去背工具（vendor/）：用到時才下載，存起來就一直用（檔案很大、不會變）
+//  - App 不連任何外部網站（兒童 App 規定）
 // 新增檔案時記得加進 SHELL，並把 VERSION 加一。
 'use strict';
-const VERSION = 'paper-v19';
+const VERSION = 'paper-v20';
 const SHELL = [
   './', 'index.html', 'manifest.webmanifest', 'css/style.css',
   'js/store.js', 'js/bgm.js', 'js/cutout.js', 'js/puppet.js', 'js/pet.js', 'js/main.js', 'js/kidkit.js', 'js/tilt.js', 'js/maker.js',
@@ -13,29 +14,29 @@ const SHELL = [
   'js/games/drum.js', 'js/games/eggs.js', 'js/games/bath.js', 'js/games/crossing.js', 'js/games/size.js', 'js/games/animals.js', 'js/games/sort.js', 'js/games/paint.js', 'js/games/flashlight.js', 'js/games/inflate.js', 'js/games/basket.js', 'js/games/keepup.js', 'js/games/darts.js', 'js/games/bricks.js', 'js/games/snake.js', 'js/games/space.js', 'js/games/bowling.js', 'js/games/ski.js', 'js/games/baseball.js', 'js/games/mathrush.js',
   'js/games/marble.js', 'js/games/maze.js', 'js/games/tightrope.js', 'js/games/tiltcar.js', 'js/games/tiltcatch.js',
   'js/games/tiltrun.js', 'js/games/tiltroam.js', 'js/games/tiltball.js', 'js/games/tiltmisc.js', 'js/games/shake.js', 'js/games/board.js', 'js/games/puzzles.js', 'js/games/kidquiz.js', 'js/games/nightmarket.js', 'js/games/timing.js', 'js/games/create.js', 'js/games/tiltpack2.js', 'js/games/tiltphys.js', 'js/games/shake2.js', 'js/games/kidquiz2.js', 'js/games/kidplay.js', 'js/games/brain.js', 'js/games/skill.js', 'js/i18n.js', 'js/games/tilt3.js', 'js/games/motion3.js', 'js/games/kid3.js', 'js/games/puzzle3.js', 'js/games/board3.js', 'js/games/motion4.js', 'js/games/kid4.js', 'js/games/brain4.js',
+  'fonts/NotoSansTC.woff2', 'fonts/NotoSansJP.woff2', 'privacy.html',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png',
 ];
-const CDN = ['cdn.jsdelivr.net', 'storage.googleapis.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL.map(u => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', e => {
-  e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== VERSION && k !== 'paper-cdn').map(k => caches.delete(k)))).then(() => self.clients.claim()));
+  e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== VERSION && k !== 'paper-vendor').map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
 self.addEventListener('fetch', e => {
   const req = e.request; if (req.method !== 'GET') return;
   const url = new URL(req.url);
-  if (CDN.includes(url.hostname)) {
-    e.respondWith(caches.open('paper-cdn').then(async c => {
+  if (url.origin !== location.origin || url.pathname.includes('/_test/')) return;
+  if (url.pathname.includes('/vendor/')) {
+    e.respondWith(caches.open('paper-vendor').then(async c => {
       const hit = await c.match(req); if (hit) return hit;
       const res = await fetch(req);
-      if (res.ok || res.type === 'opaque') c.put(req, res.clone()).catch(() => {});
+      if (res.ok) c.put(req, res.clone()).catch(() => {});
       return res;
     }));
     return;
   }
-  if (url.origin !== location.origin || url.pathname.includes('/_test/')) return;
   e.respondWith((async () => {
     const c = await caches.open(VERSION);
     try {

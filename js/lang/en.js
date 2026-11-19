@@ -70,9 +70,9 @@ I18N.add({"紙片人遊樂園":"Paper Pals Playground",
 "拍照":"Take photo",
 "切換鏡頭":"Switch camera",
 "紙片人":"Paper Doll",
-"下載貓狗去背工具中（只有第一次，約 16 MB）…":"Downloading the pet cut-out tool (first time only, about 16 MB)…",
+"準備貓狗去背工具中（第一次會比較久）…":"Getting the pet cut-out tool ready (slower the first time)…",
 "無法啟動去背工具":"Can't start the cut-out tool",
-"下載去背工具中（只有第一次，約 23 MB）…":"Downloading the cut-out tool (first time only, about 23 MB)…",
+"準備去背工具中（第一次會比較久）…":"Getting the cut-out tool ready (slower the first time)…",
 "寵物":"Pet",
 "去背太嚴格，{0}也被切掉了，請往「寬鬆」調。":"The cut-out is too strict and {0} got cut off. Move it toward \"Loose\".",
 "照片裡找不到貓或狗。請拍側面全身、光線充足。":"No cat or dog found. Please shoot the whole body from the side with good lighting.",
@@ -1945,3 +1945,6 @@ I18N.add({ "音樂": "Music" });
 I18N.add({"🔁 輪播全部":"🔁 Shuffle All","🎠 歡樂樂園":"🎠 Happy Park","🏖️ 海邊假期":"🏖️ Beach Holiday","🌙 星空華爾滋":"🌙 Starry Waltz","⚔️ 勇敢冒險":"⚔️ Brave Adventure","🍬 糖果跳跳":"🍬 Candy Hop","🔇 關閉音樂":"🔇 Music Off"});
 // 拍畫畫
 I18N.add({"🖍️ 拍畫畫": "🖍️ Drawing", "畫放平": "Lay the drawing flat", "，從正上方拍": ", shoot from directly above", "光線充足，不要有手機的影子": "Good light, no phone shadow on the paper", "拍好後，": "After shooting, ", "用手指圈出那個人": "circle the person with your finger", "站著、手腳分開的人最好動": "Standing figures with arms and legs apart move best", "鉛筆、淡色的線比較抓不到": "Pencil and light-colored lines are harder to pick up", "用手指圈出要的那個人": "Circle the person you want with your finger", "（旁邊的名字、別的圖不要圈到）": " (leave out names and other pictures nearby)", "✔ 圈好了": "✔ Done", "↺ 重圈": "↺ Redo", "圈的範圍太小了，請把整個人圈起來。": "The circle is too small. Please circle the whole person.", "沒有找到線條，請往「寬鬆」調。": "No lines found. Move toward \"Loose\".", "圈起來的地方沒有找到畫的線條。": "No drawn lines found inside the circle.", "手腳的位置是自動猜的，不準的話按「🦴 調整關節」拖一下。": "Arm and leg positions are guessed automatically. If they look wrong, tap \"🦴 Adjust Joints\" and drag them.", "把畫放平，從正上方拍，整個人都要在畫面裡": "Lay the drawing flat and shoot from directly above, with the whole person in the frame", "線條沒抓到 → 往「寬鬆」；紙上的髒點也被抓到 → 往「嚴格」": "Lines missing → toward \"Loose\"; smudges on the paper picked up → toward \"Strict\"", "讀取照片中…": "Loading photo…", "把畫變成紙片人中…": "Turning the drawing into a paper puppet…", "頭頂": "Top of head", "屁股": "Hips", "兩隻手": "Both hands", "兩隻腳": "Both feet"});
+
+// 2026-11-19：兒童 App 規定（隱私、家長關卡、刪除照片、揍揍紙片人台詞）
+I18N.add({"🔒 隱私權政策":"🔒 Privacy Policy","🗑️ 刪除拍過的紙片人":"🗑️ Delete saved paper dolls","請大人幫忙":"Grown-up help needed","分享之前，請大人回答：":"Before sharing, a grown-up please answer:","確定":"OK","取消":"Cancel","答案":"Answer","要刪除拍過的紙片人嗎？刪除後不能復原。":"Delete the saved paper dolls? This cannot be undone.","已經刪除了。":"Deleted.","哎喲！":"Whoa!","手套好軟喔～":"These gloves are so soft~","嘿！偷襲！":"Hey! Sneak attack!","輕一點啦～":"Easy there~","好快的拳！":"Fast punch!","眼冒金星了～":"I'm seeing stars~","不算不算！":"That doesn't count!","嚇我一跳！":"You startled me!","肚子好癢～":"My tummy tickles~","哈哈好癢！":"Haha, that tickles!","咕嚕～":"Gurgle~","下次再比～":"Rematch next time~"});

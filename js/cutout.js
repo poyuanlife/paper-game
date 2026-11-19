@@ -1,26 +1,26 @@
 'use strict';
 // =====================================================
 //  去背 + 找身體關節
-//  人：Google MediaPipe 姿勢偵測（Pose Landmarker），第一次約 23 MB
-//  貓狗：MediaPipe 影像分割（DeepLab v3，認得貓、狗），第一次約 16 MB（兩種共用的核心 13.5 MB 只下載一次）
-//  之後瀏覽器會記住（離線也能用）。
+//  人：Google MediaPipe 姿勢偵測（Pose Landmarker）
+//  貓狗：MediaPipe 影像分割（DeepLab v3，認得貓、狗）
+//  程式和模型都放在 vendor/（固定版本，不連外部網站；已關掉 MediaPipe 的使用統計上傳，見 vendor/README.md）。
 //  照片全部在這台裝置上處理，不會上傳。
 // =====================================================
 const Cutout = (() => {
-  const MP_BASE = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.1.1';
-  const MODEL = 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/latest/pose_landmarker_full.task';
-  const SEG_MODEL = 'https://storage.googleapis.com/mediapipe-models/image_segmenter/deeplab_v3/float32/latest/deeplab_v3.tflite';
+  const MP_BASE = new URL('vendor/mediapipe', location.href).href;
+  const MODEL = new URL('vendor/models/pose_landmarker_full.task', location.href).href;
+  const SEG_MODEL = new URL('vendor/models/deeplab_v3.tflite', location.href).href;
   const ANIMALS = ['cat', 'dog', 'horse', 'sheep', 'cow'];   // 狗有時會被認成羊、馬，一起算
   let poseP = null, segP = null, visionP = null, last = null;
 
   function getVision() {
-    if (!visionP) { visionP = (async () => { const mp = await import(`${MP_BASE}/vision_bundle.mjs`); return { mp, files: await mp.FilesetResolver.forVisionTasks(`${MP_BASE}/wasm`) }; })(); visionP.catch(() => { visionP = null; }); }
+    if (!visionP) { visionP = (async () => { const mp = await import(`${MP_BASE}/vision_bundle_esm.js`); return { mp, files: await mp.FilesetResolver.forVisionTasks(`${MP_BASE}/wasm`) }; })(); visionP.catch(() => { visionP = null; }); }
     return visionP;
   }
   function getSeg(onMsg) {
     if (segP) return segP;
     segP = (async () => {
-      onMsg && onMsg('下載貓狗去背工具中（只有第一次，約 16 MB）…');
+      onMsg && onMsg('準備貓狗去背工具中（第一次會比較久）…');
       const { mp, files } = await getVision();
       let err = null;
       for (const delegate of ['GPU', 'CPU']) {
@@ -36,7 +36,7 @@ const Cutout = (() => {
   function getPose(onMsg) {
     if (poseP) return poseP;
     poseP = (async () => {
-      onMsg && onMsg('下載去背工具中（只有第一次，約 23 MB）…');
+      onMsg && onMsg('準備去背工具中（第一次會比較久）…');
       const { mp, files } = await getVision();
       let err = null;
       for (const delegate of ['GPU', 'CPU']) {

@@ -82,7 +82,7 @@ const I18N = (() => {
   return { get lang() { return lang; }, LANGS, tr, add, startDom, set, menu, speechLang: () => SPEECH[lang] };
 })();
 const tr = s => I18N.tr(s);
-if (I18N.lang === 'ja') document.write('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@500;700;900&display=swap">');
+if (I18N.lang === 'ja') document.fonts && document.fonts.load('900 16px "Noto Sans JP"').catch(() => {});
 document.addEventListener('DOMContentLoaded', () => {
   I18N.startDom();
   const b = document.getElementById('bLang'); if (!b) return;

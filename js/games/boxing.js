@@ -1,18 +1,19 @@
 'use strict';
-// 揍揍紙片人：點哪裡就揍哪裡（頭或肚子）。紙片人會被打扁、甩來甩去、貼 OK 繃，血打光就 K.O. 飛出場外。
+// 揍揍紙片人：點哪裡就揍哪裡（頭或肚子）。紙片人會被打扁、甩來甩去、貼星星貼紙，元氣用完就 K.O. 飛出場外。
+// 紙片人可能是真人照片，所以台詞不哭、不求饒、不喊痛，也沒有血條（兒童 App 規定）。
 registerGame({
   id: 'boxing', name: '揍揍紙片人', icon: '🥊', color: '#d94b4b',
   desc: '拳擊手套伺候！把紙片人打飛出場外！',
   howto: '點紙片人的頭或肚子出拳（鍵盤：空白鍵打頭、↓ 打肚子）。他舉手擋臉時就打肚子！連打有加成，K.O. 一次多 100 分，限時 45 秒。',
   TIME: 45,
   LINES: {
-    hit: ['好痛！', '不要打臉！', '我錯了～', '媽媽～', '嗚哇！', '手下留情啊！', '你來真的？', '我的臉！', '認輸認輸！', '再打我要哭了', '我的髮型！', '有話好說！'],
-    body: ['嗚噗！', '肚子！', '早餐要吐出來了', '咳咳！'],
+    hit: ['哎喲！', '手套好軟喔～', '嘿！偷襲！', '哇～', '輕一點啦～', '你來真的？', '好快的拳！', '眼冒金星了～', '不算不算！', '嚇我一跳！', '我的髮型！', '有話好說！'],
+    body: ['噗！', '肚子好癢～', '哈哈好癢！', '咕嚕～'],
     dodge: ['打不到～', '嘿嘿！', '太慢了！', '閃！'],
     guard: ['擋住了！', '沒用的～', '鐵壁防禦！'],
     enter: ['我不服！再來！', '剛剛是意外！', '這次不會輸！', '我還沒認真！'],
     taunt: ['來啊～', '就這樣？', '打我啊～', '你是不是在發呆？'],
-    ko: ['我會回來的～～', '飛～～～', '下次再說～'],
+    ko: ['我會回來的～～', '飛～～～', '下次再比～'],
   },
 
   start() {
@@ -90,7 +91,7 @@ registerGame({
     this.pow(p.x, p.y, crit ? '會心一擊！' : pick(head ? ['砰！', '啪！', 'POW!', '咚！'] : ['噗！', '碰！', 'BAM!']), crit);
     if (this.combo >= 3) FX.text(p.x, p.y + 50, `${this.combo} 連打！`, '#ff8a00', 26);
     FX.burst(p.x, p.y, crit ? 16 : 7, ['#ffd23f', '#fff6c8', '#ff6b6b'], crit ? 1 : 0.6);
-    // OK 繃
+    // 星星貼紙
     const A = Puppet.anchors(App.pup);
     if (this.stickers.length < 10 && Math.random() < 0.75) {
       if (head) this.stickers.push({ part: 'head', x: A.head.x + rand(-1, 1) * A.headR * 0.4, y: A.head.y + rand(-0.6, 0.6) * A.headR * 0.4, r: rand(-0.8, 0.8) });
@@ -217,7 +218,7 @@ registerGame({
       alpha, decor: (n, cc) => {
         for (const s of stickers) if (s.part === n) {
           cc.save(); cc.translate(s.x, s.y); cc.rotate(s.r);
-          for (const r of [0, Math.PI / 2]) { cc.save(); cc.rotate(r); Paper.rect(cc, -sz, -sz * 0.32, sz * 2, sz * 0.64, '#f0c08a', sz * 0.3, { border: sz * 0.12, blur: 2, oy: 1 }); cc.fillStyle = '#e8ad70'; cc.fillRect(-sz * 0.35, -sz * 0.3, sz * 0.7, sz * 0.6); cc.restore(); }
+          Paper.star(cc, 0, 0, sz * 0.9, '#ffd23f', 0, { border: sz * 0.12 });
           cc.restore();
         }
       },
@@ -254,13 +255,13 @@ registerGame({
       const sc = Math.min(1, V.W / 700) * 1.05;
       this.drawGlove(c, gx, gy, gs * sc, ga);
     }
-    // 血條
+    // 元氣條（不用紅綠的血條顏色）
     const bw = Math.min(440, V.W * 0.62), bx = (V.W - bw) / 2, by = 76;
-    Paper.rect(c, bx, by, bw, 26, '#5a2a2a', 13, { border: 4 });
+    Paper.rect(c, bx, by, bw, 26, '#4a3a6a', 13, { border: 4 });
     const f = clamp(this.hp / this.maxHp, 0, 1);
-    if (f > 0) { c.fillStyle = f > 0.5 ? '#5bd36b' : f > 0.25 ? '#ffc23d' : '#ff4d4d'; c.beginPath(); Paper.rrect(c, bx + 3, by + 3, (bw - 6) * f, 20, 10); c.fill(); }
+    if (f > 0) { c.fillStyle = '#ffc23d'; c.beginPath(); Paper.rrect(c, bx + 3, by + 3, (bw - 6) * f, 20, 10); c.fill(); }
     c.font = '900 18px "Noto Sans TC", system-ui, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
-    c.lineWidth = 5; c.strokeStyle = '#5a2a2a'; c.strokeText(`第 ${this.round} 回合`, V.W / 2, by + 13); c.fillStyle = '#fff'; c.fillText(`第 ${this.round} 回合`, V.W / 2, by + 13);
+    c.lineWidth = 5; c.strokeStyle = '#4a3a6a'; c.strokeText(`第 ${this.round} 回合`, V.W / 2, by + 13); c.fillStyle = '#fff'; c.fillText(`第 ${this.round} 回合`, V.W / 2, by + 13);
   },
   hud() { return { L: `<b>${this.score}</b> 分${this.combo >= 3 ? `　<span class="combo">${this.combo} 連打</span>` : ''}`, R: `K.O. ${this.kos}　⏱ ${Math.ceil(this.left)}` }; },
 });

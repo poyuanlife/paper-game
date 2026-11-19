@@ -70,9 +70,9 @@ I18N.add({"紙片人遊樂園":"Taman Permainan Boneka Kertas",
 "拍照":"Ambil gambar",
 "切換鏡頭":"Tukar kamera",
 "紙片人":"Boneka Kertas",
-"下載貓狗去背工具中（只有第一次，約 16 MB）…":"Memuat turun alat padam latar untuk haiwan (hanya pertama kali, sekitar 16 MB)…",
+"準備貓狗去背工具中（第一次會比較久）…":"Menyediakan alat padam latar untuk haiwan (kali pertama agak lama)…",
 "無法啟動去背工具":"Alat padam latar tidak boleh dijalankan",
-"下載去背工具中（只有第一次，約 23 MB）…":"Memuat turun alat padam latar (hanya pertama kali, sekitar 23 MB)…",
+"準備去背工具中（第一次會比較久）…":"Menyediakan alat padam latar (kali pertama agak lama)…",
 "寵物":"Haiwan",
 "去背太嚴格，{0}也被切掉了，請往「寬鬆」調。":"Padam latar terlalu ketat sehingga {0} ikut terpotong. Alih ke \"Longgar\".",
 "照片裡找不到貓或狗。請拍側面全身、光線充足。":"Kucing atau anjing tidak ditemukan. Gambar seluruh badannya dari samping dengan cahaya cukup.",
@@ -1945,3 +1945,6 @@ I18N.add({ "音樂": "Muzik" });
 I18N.add({"🔁 輪播全部":"🔁 Main Bergilir","🎠 歡樂樂園":"🎠 Taman Ceria","🏖️ 海邊假期":"🏖️ Cuti Pantai","🌙 星空華爾滋":"🌙 Waltz Bintang","⚔️ 勇敢冒險":"⚔️ Pengembaraan Berani","🍬 糖果跳跳":"🍬 Gula-gula Melompat","🔇 關閉音樂":"🔇 Tutup Muzik"});
 // 拍畫畫
 I18N.add({"🖍️ 拍畫畫": "🖍️ Lukisan", "畫放平": "Letakkan lukisan rata", "，從正上方拍": ", ambil gambar dari atas", "光線充足，不要有手機的影子": "Cahaya mencukupi, tiada bayang telefon", "拍好後，": "Selepas mengambil gambar, ", "用手指圈出那個人": "bulatkan orang itu dengan jari", "站著、手腳分開的人最好動": "Orang berdiri dengan tangan dan kaki terpisah paling baik bergerak", "鉛筆、淡色的線比較抓不到": "Garisan pensel dan warna pudar sukar dikesan", "用手指圈出要的那個人": "Bulatkan orang yang kamu mahu dengan jari", "（旁邊的名字、別的圖不要圈到）": " (jangan masukkan nama dan gambar lain di sebelah)", "✔ 圈好了": "✔ Siap", "↺ 重圈": "↺ Ulang", "圈的範圍太小了，請把整個人圈起來。": "Bulatan terlalu kecil. Bulatkan seluruh orang itu.", "沒有找到線條，請往「寬鬆」調。": "Garisan tidak dijumpai. Alih ke arah \"Longgar\".", "圈起來的地方沒有找到畫的線條。": "Tiada garisan lukisan di dalam bulatan.", "手腳的位置是自動猜的，不準的話按「🦴 調整關節」拖一下。": "Kedudukan tangan dan kaki diteka secara automatik. Jika kurang tepat, tekan \"🦴 Laras Sendi\" dan alihkan.", "把畫放平，從正上方拍，整個人都要在畫面裡": "Letakkan lukisan rata, ambil gambar dari atas, seluruh orang mesti dalam bingkai", "線條沒抓到 → 往「寬鬆」；紙上的髒點也被抓到 → 往「嚴格」": "Garisan hilang → ke \"Longgar\"; kotoran kertas turut diambil → ke \"Ketat\"", "讀取照片中…": "Memuatkan foto…", "把畫變成紙片人中…": "Menukar lukisan menjadi boneka kertas…", "頭頂": "Hujung kepala", "屁股": "Punggung", "兩隻手": "Kedua-dua tangan", "兩隻腳": "Kedua-dua kaki"});
+
+// 2026-11-19：兒童 App 規定（隱私、家長關卡、刪除照片、揍揍紙片人台詞）
+I18N.add({"🔒 隱私權政策":"🔒 Dasar Privasi","🗑️ 刪除拍過的紙片人":"🗑️ Padam boneka kertas yang disimpan","請大人幫忙":"Minta bantuan orang dewasa","分享之前，請大人回答：":"Sebelum berkongsi, orang dewasa sila jawab:","確定":"OK","取消":"Batal","答案":"Jawapan","要刪除拍過的紙片人嗎？刪除後不能復原。":"Padam boneka kertas yang disimpan? Tidak boleh dibuat asal.","已經刪除了。":"Sudah dipadam.","哎喲！":"Aduh!","手套好軟喔～":"Sarung tinju ini lembut~","嘿！偷襲！":"Hei! Serangan curi-curi!","輕一點啦～":"Perlahan sikit~","好快的拳！":"Tumbukan laju!","眼冒金星了～":"Nampak bintang-bintang~","不算不算！":"Tak kira!","嚇我一跳！":"Terkejut saya!","肚子好癢～":"Perut saya geli~","哈哈好癢！":"Haha, gelinya!","咕嚕～":"Kruk kruk~","下次再比～":"Lain kali lawan lagi~"});

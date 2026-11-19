@@ -12,8 +12,8 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&display=swap">
+<meta http-equiv="Content-Security-Policy" content="connect-src 'self' blob: data:">
+<link rel="preload" href="fonts/NotoSansTC.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/style.css">
 <script src="js/i18n.js"></script>
 <script>if (I18N.lang !== "zh") document.write('<script src="js/lang/' + I18N.lang + '.js"><\/script>');</script>
@@ -33,6 +33,7 @@
     <button id="bChar" class="link hidden"></button>
     <button id="bInstall" class="link hidden">📲 加到主畫面，像 App 一樣玩</button>
     <p id="installTip" class="installTip hidden"></p>
+    <a class="link" href="privacy.html">🔒 隱私權政策</a>
   </div>
   <button id="bSound" class="corner">🔊</button>
   <button id="bMusic" class="corner second" aria-label="音樂">🎵</button>
@@ -104,6 +105,7 @@
         <button id="mkAlbum" class="big alt">🖼️ 從相簿選</button>
       </div>
       <button id="mkDefault" class="link">改用預設角色</button>
+      <button id="mkDelete" class="link hidden">🗑️ 刪除拍過的紙片人</button>
       <input type="file" id="fileIn" accept="image/*" hidden>
     </div>
     <div id="mkLasso" class="hidden">
@@ -184,6 +186,21 @@
     </div>
   </div>
 </section>
+
+<!-- 家長關卡：分享前請大人回答問題（兒童 App 規定） -->
+<div id="gate" class="gate hidden" role="dialog" aria-modal="true" aria-labelledby="gateTitle">
+  <div class="panel small">
+    <h2 id="gateTitle">請大人幫忙</h2>
+    <p>分享之前，請大人回答：</p>
+    <p class="gateQ"><span id="gateQ"></span></p>
+    <input id="gateIn" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" maxlength="3" aria-label="答案">
+    <p id="gateErr" class="err"></p>
+    <div class="btnRow">
+      <button id="gateOk" class="big">確定</button>
+      <button id="gateNo" class="big alt">取消</button>
+    </div>
+  </div>
+</div>
 
 <section id="scrResult" class="scr top hidden">
   <div class="panel small result">

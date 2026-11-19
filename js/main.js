@@ -323,7 +323,19 @@ async function shareResult() {
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 5000);
 }
-$('rsShare').onclick = () => { Sfx.play('click'); shareResult(); };
+// 家長關卡：分享（圖裡有紙片人照片）前請大人回答一題乘法（兒童 App 規定）
+function parentGate() {
+  return new Promise(done => {
+    const a = 6 + Math.floor(Math.random() * 4), b = 6 + Math.floor(Math.random() * 4), box = $('gate'), inp = $('gateIn');
+    $('gateQ').textContent = `${a} × ${b} = ?`; $('gateErr').textContent = ''; inp.value = '';
+    box.classList.remove('hidden'); setTimeout(() => inp.focus(), 50);
+    const close = ok => { box.classList.add('hidden'); $('gateOk').onclick = $('gateNo').onclick = inp.onkeydown = null; done(ok); };
+    const check = () => { if (+inp.value.trim() === a * b && inp.value.trim() !== '') { Sfx.play('click'); close(true); } else { Sfx.play('nope'); close(false); } };
+    $('gateOk').onclick = check; inp.onkeydown = e => { if (e.key === 'Enter') check(); };
+    $('gateNo').onclick = () => { Sfx.play('click'); close(false); };
+  });
+}
+$('rsShare').onclick = async () => { Sfx.play('click'); if (await parentGate()) shareResult(); };
 
 // ---- PWA：離線也能玩、可以加到主畫面 ----
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
@@ -348,7 +360,16 @@ function syncCharBtn() {
   b.classList.toggle('hidden', list.length < 2);
   b.textContent = `🔄 換角色（現在：${CHAR_NAMES[App.charSlot].slice(2).trim()}）`;
   $('bMake').textContent = App.chars.me || App.chars.pet ? '📷 換 / 做紙片人' : '📷 做我的紙片人';
+  $('mkDelete').classList.toggle('hidden', !(App.chars.me || App.chars.pet));
 }
+// 刪除拍過的紙片人（照片只存在這台裝置，玩家要能自己刪掉）
+$('mkDelete').onclick = async () => {
+  Sfx.play('click');
+  if (!confirm(tr('要刪除拍過的紙片人嗎？刪除後不能復原。'))) return;
+  await Promise.all([Store.clearChar('me'), Store.clearChar('pet')]);
+  App.chars = { me: null, pet: null }; App.useChar('default');
+  alert(tr('已經刪除了。'));
+};
 $('bChar').onclick = () => {
   Sfx.play('click'); const list = charCycle(), i = list.indexOf(App.charSlot);
   App.useChar(list[(i + 1) % list.length]); FX.burst(V.W / 2, V.H * 0.6, 16, undefined, 0.7);
