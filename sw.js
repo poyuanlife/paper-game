@@ -4,7 +4,7 @@
 //  - App 不連任何外部網站（兒童 App 規定）
 // 新增檔案時記得加進 SHELL，並把 VERSION 加一。
 'use strict';
-const VERSION = 'paper-v20';
+const VERSION = 'paper-v21';
 const SHELL = [
   './', 'index.html', 'manifest.webmanifest', 'css/style.css',
   'js/store.js', 'js/bgm.js', 'js/cutout.js', 'js/puppet.js', 'js/pet.js', 'js/main.js', 'js/kidkit.js', 'js/tilt.js', 'js/maker.js',

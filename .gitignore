@@ -1,3 +1,11 @@
 _test/
 node_modules/
 tools/font-src/
+www/
+android/app/build/
+android/build/
+android/.gradle/
+android/local.properties
+android/keystore.properties
+*.jks
+*.keystore

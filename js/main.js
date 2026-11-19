@@ -10,7 +10,8 @@ const pick = a => a[Math.floor(Math.random() * a.length)];
 // 畫面：邏輯高度固定 720，寬度跟著螢幕比例（直向手機約 405，電腦約 1280）
 const V = { W: 1280, H: 720, // 會在 resize() 重新計算
   k: 1, dpr: 1, shake: 0 };
-const cv = $('cv'), ctx = cv.getContext('2d');
+// alpha: false：畫面每次都畫滿背景，不需要透明；有些手機顯示卡在透明畫布上混合半透明像素會出現彩色雜點
+const cv = $('cv'), ctx = cv.getContext('2d', { alpha: false });
 function resize() {
   V.dpr = Math.min(2, devicePixelRatio || 1);
   const w = innerWidth, h = innerHeight;
@@ -122,6 +123,8 @@ const Paper = (() => {
   // 紙的質感：細小雜點，最後蓋在整個畫面上
   let grain = null;
   function texture(c) {
+    // 省電畫質不畫：有些手機（例如 Redmi 平板）的顯示卡放久了會把這張很淡的雜點貼圖弄壞，變成滿畫面的彩色顆粒；改用 CPU 畫又太慢
+    if (LowGfx.on) return;
     if (!grain) {
       const g = document.createElement('canvas'); g.width = g.height = 160; const x = g.getContext('2d'), d = x.createImageData(160, 160);
       for (let i = 0; i < d.data.length; i += 4) { const v = Math.random() < 0.5 ? 0 : 255; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = Math.random() * 14; }
@@ -249,8 +252,31 @@ document.querySelectorAll('#gameTabs button').forEach(b => b.onclick = () => { S
 
 // ---- 主迴圈 ----
 let lastT = performance.now();
+// 省電畫質：模糊陰影在效能較弱的手機（Android WebView）上非常耗顯示卡，畫面會掉到 10 FPS 以下。
+// 遊戲中自動量 FPS，太低就讓主畫布的陰影改成硬邊（還是有紙片陰影，只是不模糊），並記住這台裝置。
+// 背景、雲這些只畫一次的快取圖不受影響，仍是柔和陰影。
+const LowGfx = (() => {
+  const KEY = 'paper-lowgfx', SB = Object.getOwnPropertyDescriptor(CanvasRenderingContext2D.prototype, 'shadowBlur');
+  let on = false, n = 0, t0 = 0;
+  const set = v => {
+    on = v; try { localStorage.setItem(KEY, v ? '1' : '0'); } catch (e) {}
+    if (v) Object.defineProperty(ctx, 'shadowBlur', { set(x) { SB.set.call(this, 0); }, get() { return 0; }, configurable: true });
+    else delete ctx.shadowBlur;
+  };
+  try { if (localStorage.getItem(KEY) === '1') set(true); } catch (e) {}
+  return {
+    get on() { return on; }, set,
+    sample(now, ok) {   // ok：現在的畫面適合量（遊戲中、不是剛切換）
+      if (on || !ok) { n = 0; return; }
+      if (!n) t0 = now;
+      if (++n >= 90) { const fps = (n - 1) * 1000 / (now - t0); n = 0; if (fps < 40) { console.warn(`Only ${fps.toFixed(0)} FPS, switching to low-graphics mode`); set(true); } }
+    },
+  };
+})();
 function frame(now) {
   requestAnimationFrame(frame);
+  if (now - lastT > 250) LowGfx.sample(now, false);   // 切到背景回來、或卡住很久的那一下不算
+  else LowGfx.sample(now, (App.state === 'play' || App.state === 'home') && App.stateT > 1 && !document.hidden);
   const dt = Math.min(1 / 30, (now - lastT) / 1000); lastT = now;
   App.t += dt; App.stateT += dt;
   try { step(dt); } catch (e) { console.error(e); }
@@ -316,6 +342,15 @@ async function shareResult() {
   Puppet.draw(x, App.pup, W / 2, H - 120, 700, App.resultNew ? Puppet.Poses.cheer(0.13) : Puppet.Poses.dance(0.3));
   txt('紙片人遊樂園', W / 2, H - 70, 46, '#e0573c', 12);
   const blob = await new Promise(r => c.toBlob(r, 'image/png')), name = `紙片人-${g.id}-${Math.floor(g.score || 0)}.png`;
+  if (NATIVE) {
+    // Android App：WebView 不能用 navigator.share 和下載，先存到暫存資料夾再叫出系統分享
+    try {
+      const P = Capacitor.Plugins, data = await new Promise(r => { const f = new FileReader(); f.onload = () => r(String(f.result).split(',')[1]); f.readAsDataURL(blob); });
+      const w = await P.Filesystem.writeFile({ path: `share-${Date.now()}.png`, data, directory: 'CACHE' });
+      await P.Share.share({ title: '紙片人遊樂園', text: `我在「${g.name}」拿到 ${Math.floor(g.score || 0)} 分！`, files: [w.uri] });
+    } catch (e) { if (!/cancel/i.test(String(e && e.message))) console.warn('share failed', e); }
+    return;
+  }
   try {
     const file = new File([blob], name, { type: 'image/png' });
     if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: '紙片人遊樂園', text: `我在「${g.name}」拿到 ${Math.floor(g.score || 0)} 分！` }); return; }
@@ -338,13 +373,30 @@ function parentGate() {
 $('rsShare').onclick = async () => { Sfx.play('click'); if (await parentGate()) shareResult(); };
 
 // ---- PWA：離線也能玩、可以加到主畫面 ----
-if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+// Android App（Capacitor）裡檔案本來就在手機上，不用 service worker，也不用「加到主畫面」
+const NATIVE = !!(window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform());
+if (NATIVE) document.documentElement.classList.add('native');
+// Android 返回鍵：回上一個畫面；只有在首頁按才離開 App
+function backButton() {
+  const vis = id => $(id) && !$(id).classList.contains('hidden'), st = App.state;
+  if (vis('gate')) return $('gateNo').click(), true;
+  if (vis('installTip')) return $('installTip').classList.add('hidden'), true;
+  if (st === 'play') return App.pause(), true;
+  if (st === 'cam') return $('camCancel').click(), true;
+  if (st === 'pause') return $('psQuit').click(), true;
+  if (st === 'result') return $('rsBack').click(), true;
+  if (st === 'ready') return Sfx.play('click'), App.go('select'), true;
+  if (st === 'select' || st === 'maker') return Sfx.play('click'), App.go('home'), true;
+  return false;   // 首頁
+}
+if (NATIVE && Capacitor.Plugins.App) Capacitor.Plugins.App.addListener('backButton', () => { if (!backButton()) Capacitor.Plugins.App.exitApp(); });
+if (!NATIVE && 'serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 let installEvt = null;
 const standalone = () => matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches || navigator.standalone;
 const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; $('bInstall').classList.remove('hidden'); });
 addEventListener('appinstalled', () => { installEvt = null; $('bInstall').classList.add('hidden'); $('installTip').classList.add('hidden'); });
-if (isIOS && !standalone()) $('bInstall').classList.remove('hidden');
+if (isIOS && !standalone() && !NATIVE) $('bInstall').classList.remove('hidden');
 $('bInstall').onclick = async () => {
   Sfx.play('click');
   if (installEvt) { try { installEvt.prompt(); await installEvt.userChoice; installEvt = null; $('bInstall').classList.add('hidden'); return; } catch (e) {} }

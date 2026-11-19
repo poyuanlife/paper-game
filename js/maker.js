@@ -81,7 +81,7 @@ const Maker = (() => {
     if (!lasImg || $('mkLasso').classList.contains('hidden')) return;
     const c = $('mkLas'), x = c.getContext('2d'), d = Math.min(2, devicePixelRatio || 1), w = c.clientWidth, h = c.clientHeight;
     if (c.width !== Math.round(w * d) || c.height !== Math.round(h * d)) { c.width = Math.round(w * d); c.height = Math.round(h * d); }
-    if (!lasBmp) { lasBmp = document.createElement('canvas'); lasBmp.width = lasImg.width; lasBmp.height = lasImg.height; lasBmp.getContext('2d').putImageData(lasImg, 0, 0); }
+    if (!lasBmp) { lasBmp = document.createElement('canvas'); lasBmp.width = lasImg.width; lasBmp.height = lasImg.height; lasBmp.getContext('2d', { willReadFrequently: true }).putImageData(lasImg, 0, 0); }
     const f = lasFit();
     x.setTransform(d, 0, 0, d, 0, 0); x.clearRect(0, 0, w, h);
     x.drawImage(lasBmp, f.ox, f.oy, lasImg.width * f.s, lasImg.height * f.s);
@@ -129,17 +129,26 @@ const Maker = (() => {
     busy = false;
   };
 
-  // ---- 關節編輯：在預覽上拖拉圓點（寵物、畫、插圖；真人照片的關節是偵測出來的，不用調） ----
+  // ---- 關節編輯：在預覽上拖拉圓點（寵物、畫、插圖、拍人都可以） ----
   const PET_PTS = [['head', '#e8453c'], ['neck', '#d9a400'], ['tailB', '#1fa7b5'], ['tailT', '#3b5bdb'], ['footF', '#c23bc9'], ['footB', '#777']];
   const PET_BONES = [['head', 'neck'], ['neck', 'tailB'], ['tailB', 'tailT'], ['neck', 'footF'], ['tailB', 'footB']];
   const HUM_PTS = [['top', '#e8453c'], ['neck', '#d9a400'], ['pelvis', '#1fa7b5'], ['hnL', '#c23bc9'], ['hnR', '#c23bc9'], ['ftL', '#3b5bdb'], ['ftR', '#3b5bdb']];
   const HUM_BONES = [['top', 'neck'], ['neck', 'pelvis'], ['neck', 'hnL'], ['neck', 'hnR'], ['pelvis', 'ftL'], ['pelvis', 'ftR']];
+  // 拍人（MediaPipe 偵測的）：關節比較完整，肩膀、手肘、膝蓋也能拖；手腕、腳踝、髖關節跟著手、腳、屁股一起移動
+  const FULL_PTS = [['top', '#e8453c'], ['neck', '#d9a400'], ['shL', '#f08c00'], ['shR', '#f08c00'], ['elL', '#2f9e44'], ['elR', '#2f9e44'], ['hnL', '#c23bc9'], ['hnR', '#c23bc9'],
+    ['pelvis', '#1fa7b5'], ['knL', '#0c8599'], ['knR', '#0c8599'], ['ftL', '#3b5bdb'], ['ftR', '#3b5bdb']];
+  const FULL_BONES = [['top', 'neck'], ['neck', 'shL'], ['neck', 'shR'], ['shL', 'elL'], ['elL', 'hnL'], ['shR', 'elR'], ['elR', 'hnR'], ['neck', 'pelvis'], ['pelvis', 'knL'], ['knL', 'ftL'], ['pelvis', 'knR'], ['knR', 'ftR']];
+  const FOLLOW = { hnL: ['wrL'], hnR: ['wrR'], ftL: ['anL'], ftR: ['anR'], pelvis: ['hipL', 'hipR'] };
   const isPet = () => !!cur && cur.J.kind === 'pet';
-  const canEdit = () => !!cur && (isPet() || !!cur.J.auto);
-  const PTS = () => isPet() ? PET_PTS : HUM_PTS;
+  const isFull = () => !!cur && !isPet() && !cur.J.auto && !!cur.J.elL;
+  const canEdit = () => !!cur && (isPet() || !!cur.J.auto || isFull());
+  const PTS = () => isPet() ? PET_PTS : isFull() ? FULL_PTS : HUM_PTS;
+  const BONES = () => isPet() ? PET_BONES : isFull() ? FULL_BONES : HUM_BONES;
   function setEdit(on) {
     editing = on && canEdit();
-    const names = isPet() ? ['頭', '脖子', '尾巴根', '尾巴尖', '前腳', '後腳'] : ['頭頂', '脖子', '屁股', '兩隻手', null, '兩隻腳'];
+    const names = isPet() ? ['頭', '脖子', '尾巴根', '尾巴尖', '前腳', '後腳']
+      : isFull() ? ['頭頂', '脖子', '肩膀', null, '手肘', null, '手', null, '屁股', '膝蓋', null, '腳', null]
+      : ['頭頂', '脖子', '屁股', '兩隻手', null, '兩隻腳'];
     if (editing) $('mkEditHint').innerHTML = '拖拉圓點到正確的位置：' + PTS().map(([, col], i) => names[i] && `<b style="color:${col}">${names[i]}</b>`).filter(Boolean).join(I18N.lang === 'zh' || I18N.lang === 'ja' ? '、' : ', ');
     $('mkPrev').classList.toggle('edit', editing);
     $('mkEditHint').classList.toggle('hidden', !editing);
@@ -160,12 +169,14 @@ const Maker = (() => {
   });
   $('mkPrev').addEventListener('pointermove', e => {
     if (!drag) return; const p = local(e), f = fit();
-    cur.J[drag] = { x: clamp((p.x - f.ox) / f.s, 0, cur.canvas.width), y: clamp((p.y - f.oy) / f.s, 0, cur.canvas.height) };
+    const old = cur.J[drag], q = { x: clamp((p.x - f.ox) / f.s, 0, cur.canvas.width), y: clamp((p.y - f.oy) / f.s, 0, cur.canvas.height) };
+    if (isFull()) for (const n of FOLLOW[drag] || []) if (cur.J[n]) cur.J[n] = { x: cur.J[n].x + q.x - old.x, y: cur.J[n].y + q.y - old.y };
+    cur.J[drag] = q;
   });
   const endDrag = () => {
     if (!drag) return; drag = null;
-    // 人：只拖了 7 個主要的點，肩膀、手肘、膝蓋…跟著重算
-    if (!isPet()) cur.J = Object.assign(Cutout.humanFromKeys(cur.J), cur.J.draw ? { draw: 1 } : {});
+    // 畫畫、插圖：只拖了 7 個主要的點，肩膀、手肘、膝蓋…跟著重算（拍人的關節每個都能拖，不用重算）
+    if (!isPet() && !isFull()) cur.J = Object.assign(Cutout.humanFromKeys(cur.J), cur.J.draw ? { draw: 1 } : {});
     try { prevPup = Puppet.build(cur.canvas, cur.J); } catch (e) { err(e.message); }
   };
   $('mkPrev').addEventListener('pointerup', endDrag);
@@ -181,7 +192,7 @@ const Maker = (() => {
       const f = fit(), J = cur.J, P = n => ({ x: f.ox + J[n].x * f.s, y: f.oy + J[n].y * f.s });
       x.globalAlpha = 0.85; x.drawImage(cur.canvas, f.ox, f.oy, cur.canvas.width * f.s, cur.canvas.height * f.s); x.globalAlpha = 1;
       x.strokeStyle = 'rgba(255,255,255,0.9)'; x.lineWidth = 3; x.setLineDash([6, 5]); x.beginPath();
-      for (const [a, b] of isPet() ? PET_BONES : HUM_BONES) { const p = P(a), q = P(b); x.moveTo(p.x, p.y); x.lineTo(q.x, q.y); }
+      for (const [a, b] of BONES()) { const p = P(a), q = P(b); x.moveTo(p.x, p.y); x.lineTo(q.x, q.y); }
       x.stroke(); x.setLineDash([]);
       for (const [n, col] of PTS()) { const p = P(n), r = drag === n ? 13 : 10; x.fillStyle = col; x.strokeStyle = '#fff'; x.lineWidth = 3; x.beginPath(); x.arc(p.x, p.y, r, 0, Math.PI * 2); x.fill(); x.stroke(); }
       return;
@@ -197,7 +208,23 @@ const Maker = (() => {
     stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing, width: { ideal: 1920 }, height: { ideal: 1920 } }, audio: false });
     const v = $('camV'); v.srcObject = stream; v.classList.toggle('mirror', facing === 'user');
     await v.play().catch(() => {});
+    fitGuide();
   }
+  // 人形框要對齊「實際拍得到的範圍」：預覽是完整顯示（螢幕和相機比例不同時會有黑邊），框跟著影像區域擺
+  const GUIDE = { guideHuman: [0.06, 0.76, 0], guidePet: [0.22, 0.52, 0.92] };   // 上緣、高度、寬度（佔影像的比例）
+  function fitGuide() {
+    const v = $('camV'), S = $('scrCam');
+    if (!v.videoWidth || !S.clientWidth) return;
+    const sw = S.clientWidth, sh = S.clientHeight, k = Math.min(sw / v.videoWidth, sh / v.videoHeight);
+    const dw = v.videoWidth * k, dh = v.videoHeight * k, ox = (sw - dw) / 2, oy = (sh - dh) / 2;
+    for (const g of S.querySelectorAll('.guide')) {
+      const [t, h, w] = GUIDE[g.classList.contains('guidePet') ? 'guidePet' : 'guideHuman'];
+      Object.assign(g.style, { top: oy + dh * t + 'px', height: dh * h + 'px', left: ox + dw / 2 + 'px', maxWidth: dw * 0.96 + 'px', width: w ? dw * w + 'px' : '' });
+    }
+  }
+  $('camV').addEventListener('loadedmetadata', fitGuide);
+  $('camV').addEventListener('resize', fitGuide);   // 轉向時影像尺寸會變
+  addEventListener('resize', () => { if (stream) fitGuide(); });
   function stopCam() { if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; } $('camV').srcObject = null; }
   const syncTimer = () => { $('camTimer').textContent = timer ? `⏱ ${timer} 秒` : '⏱ 不倒數'; };
   $('mkCam').onclick = async () => {

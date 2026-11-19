@@ -15,7 +15,8 @@
 const Puppet = (() => {
   const SIZE = 440;   // 部位圖片的高度（像素），越大越清楚、越耗記憶體
 
-  const canvasOf = (w, h) => { const c = document.createElement('canvas'); c.width = Math.max(1, w); c.height = Math.max(1, h); return c; };
+  // willReadFrequently：用 CPU 畫（有些手機顯示卡處理 putImageData 的半透明像素有 bug，紙片人邊緣會出現彩色雜點）
+  const canvasOf = (w, h) => { const c = document.createElement('canvas'); c.width = Math.max(1, w); c.height = Math.max(1, h); c.getContext('2d', { willReadFrequently: true }); return c; };
   const mid = (a, b) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
   const lerp = (a, b, t) => ({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t });
   const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);

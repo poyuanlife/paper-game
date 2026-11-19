@@ -1,0 +1,13 @@
+{
+  "appId": "io.github.poyuanlife.papergame",
+  "appName": "紙片人遊樂園",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#9fd8ef",
+    "allowMixedContent": false,
+    "captureInput": true
+  },
+  "plugins": {
+    "StatusBar": { "overlaysWebView": false, "backgroundColor": "#9fd8ef", "style": "LIGHT" }
+  }
+}

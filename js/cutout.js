@@ -12,6 +12,22 @@ const Cutout = (() => {
   const SEG_MODEL = new URL('vendor/models/deeplab_v3.tflite', location.href).href;
   const ANIMALS = ['cat', 'dog', 'horse', 'sheep', 'cow'];   // 狗有時會被認成羊、馬，一起算
   let poseP = null, segP = null, visionP = null, last = null;
+  // 有些手機的顯示卡建得起 GPU 去背工具，但讀遮罩時才出錯（例如不支援 float 貼圖）→ 改用 CPU 重做，並記住這台裝置
+  const CPU_KEY = 'paper-mp-cpu';
+  let forceCPU = (() => { try { return localStorage.getItem(CPU_KEY) === '1'; } catch (e) { return false; } })();
+  const delegates = () => forceCPU ? ['CPU'] : ['GPU', 'CPU'];
+  const gpuError = e => /GPU|WebGL|float(16|32)|texture|gl_|OpenGL/i.test(String(e && e.message || e));
+  async function withCpuFallback(fn) {
+    try { return await fn(); }
+    catch (e) {
+      if (forceCPU || !gpuError(e)) throw e;
+      console.warn('GPU segmentation failed, retrying on CPU:', e && e.message);
+      forceCPU = true; try { localStorage.setItem(CPU_KEY, '1'); } catch (_) {}
+      for (const p of [poseP, segP]) if (p) p.then(t => t && t.close && t.close()).catch(() => {});
+      poseP = segP = null;
+      return await fn();
+    }
+  }
 
   function getVision() {
     if (!visionP) { visionP = (async () => { const mp = await import(`${MP_BASE}/vision_bundle_esm.js`); return { mp, files: await mp.FilesetResolver.forVisionTasks(`${MP_BASE}/wasm`) }; })(); visionP.catch(() => { visionP = null; }); }
@@ -23,7 +39,7 @@ const Cutout = (() => {
       onMsg && onMsg('準備貓狗去背工具中（第一次會比較久）…');
       const { mp, files } = await getVision();
       let err = null;
-      for (const delegate of ['GPU', 'CPU']) {
+      for (const delegate of delegates()) {
         try { return await mp.ImageSegmenter.createFromOptions(files, { baseOptions: { modelAssetPath: SEG_MODEL, delegate }, runningMode: 'IMAGE', outputCategoryMask: false, outputConfidenceMasks: true }); }
         catch (e) { err = e; }
       }
@@ -39,7 +55,7 @@ const Cutout = (() => {
       onMsg && onMsg('準備去背工具中（第一次會比較久）…');
       const { mp, files } = await getVision();
       let err = null;
-      for (const delegate of ['GPU', 'CPU']) {
+      for (const delegate of delegates()) {
         try {
           return await mp.PoseLandmarker.createFromOptions(files, {
             baseOptions: { modelAssetPath: MODEL, delegate }, runningMode: 'IMAGE', numPoses: 1, outputSegmentationMasks: true,
@@ -52,7 +68,8 @@ const Cutout = (() => {
     return poseP;
   }
 
-  const canvasOf = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
+  // willReadFrequently：讓這些畫布用 CPU 畫。有些手機顯示卡處理 putImageData 的半透明像素有 bug，會變成彩色雜點
+  const canvasOf = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d', { willReadFrequently: true }); return c; };
 
   async function toImageData(src, max) {
     const bmp = src instanceof Blob ? await createImageBitmap(src, { imageOrientation: 'from-image' }) : src;
@@ -380,8 +397,8 @@ const Cutout = (() => {
   }
 
   // src：照片 Blob 或已經畫好的 canvas
-  async function cut(src, onMsg, strength = 45, mode = 'human') {
-    if (mode === 'pet') return cutPet(src, onMsg, strength);
+  const cut = (src, onMsg, strength = 45, mode = 'human') => withCpuFallback(() => mode === 'pet' ? cutPet(src, onMsg, strength) : cutHuman(src, onMsg, strength));
+  async function cutHuman(src, onMsg, strength) {
     const pose = await getPose(onMsg);
     onMsg && onMsg('去背中…');
     await new Promise(r => setTimeout(r, 20));
